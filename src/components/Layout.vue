@@ -70,6 +70,10 @@
           <el-icon><OfficeBuilding /></el-icon>
           <span>客户管理</span>
         </el-menu-item>
+        <el-menu-item index="/backups" v-if="hasPerm('backup:view')">
+          <el-icon><FolderOpened /></el-icon>
+          <span>数据备份</span>
+        </el-menu-item>
         <el-menu-item index="/operation-logs" v-if="hasPerm('log:view')">
           <el-icon><Clock /></el-icon>
           <span>操作日志</span>
@@ -98,7 +102,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { House, Money, TrendCharts, DataAnalysis, Setting, User, Document, DocumentCopy, OfficeBuilding, Clock, Lock, CreditCard, Tickets, Coin, Notebook, PieChart } from '@element-plus/icons-vue'
+import { House, Money, TrendCharts, DataAnalysis, Setting, User, Document, DocumentCopy, OfficeBuilding, Clock, Lock, CreditCard, Tickets, Coin, Notebook, PieChart, FolderOpened } from '@element-plus/icons-vue'
 import { permissionStore, loadPermissionsFromCache } from '../api'
 
 loadPermissionsFromCache()

@@ -13,6 +13,9 @@
         <el-table-column prop="contactPhone" label="联系电话" width="130" />
         <el-table-column prop="contactEmail" label="联系邮箱" width="160" />
         <el-table-column prop="address" label="地址" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="taxNo" label="税号" width="130" />
+        <el-table-column prop="bankName" label="开户行" width="130" />
+        <el-table-column prop="bankAccount" label="银行卡账号" width="150" />
         <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
@@ -40,6 +43,15 @@
         <el-form-item label="地址">
           <el-input v-model="form.address" />
         </el-form-item>
+        <el-form-item label="税号">
+          <el-input v-model="form.taxNo" />
+        </el-form-item>
+        <el-form-item label="开户行">
+          <el-input v-model="form.bankName" />
+        </el-form-item>
+        <el-form-item label="银行卡号">
+          <el-input v-model="form.bankAccount" />
+        </el-form-item>
         <el-form-item label="备注">
           <el-input v-model="form.remark" type="textarea" :rows="2" />
         </el-form-item>
@@ -65,7 +77,7 @@ const formRef = ref(null)
 const list = ref([])
 
 const form = reactive({
-  id: null, clientName: '', contactPerson: '', contactPhone: '', contactEmail: '', address: '', remark: ''
+  id: null, clientName: '', contactPerson: '', contactPhone: '', contactEmail: '', address: '', taxNo: '', bankName: '', bankAccount: '', remark: ''
 })
 
 const hasPerm = (code) => permissionStore.has(code)
@@ -84,7 +96,7 @@ const loadData = async () => {
 }
 
 const resetForm = () => {
-  Object.assign(form, { id: null, clientName: '', contactPerson: '', contactPhone: '', contactEmail: '', address: '', remark: '' })
+  Object.assign(form, { id: null, clientName: '', contactPerson: '', contactPhone: '', contactEmail: '', address: '', taxNo: '', bankName: '', bankAccount: '', remark: '' })
 }
 
 const handleAdd = () => { resetForm(); isEdit.value = false; dialogVisible.value = true }

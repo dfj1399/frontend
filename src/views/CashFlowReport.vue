@@ -5,7 +5,7 @@
         <div class="card-header">
           <span>收付实现制台账</span>
           <div>
-            <el-select v-model="query.clientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="loadData">
+            <el-select v-model="query.clientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
             </el-select>
             <el-select v-model="query.projectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px">
@@ -22,6 +22,7 @@
       <el-table :data="tableData" v-loading="loading" stripe show-summary :summary-method="getSummary" size="small">
         <el-table-column prop="projectCode" label="项目编号" width="100" />
         <el-table-column prop="projectName" label="项目名称" width="130" />
+        <el-table-column prop="clientName" label="客户名称" width="110" />
         <el-table-column prop="contractAmount" label="合同金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
         <el-table-column prop="receivableBalance" label="应收账款余额" width="120" align="right"><template #default="{ row }">{{ fmt(row.receivableBalance) }}</template></el-table-column>
         <el-table-column prop="invoicedAmount" label="已票金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.invoicedAmount) }}</template></el-table-column>
@@ -42,14 +43,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getProjects, getClients, getCashFlowReport, exportCashFlowReport } from '../api'
 
 const loading = ref(false)
 const exporting = ref(false)
-const projects = ref([])
+const allProjects = ref([])
 const clients = ref([])
+const projects = computed(() => {
+  if (!query.clientName) return allProjects.value
+  return allProjects.value.filter(p => p.clientName === query.clientName)
+})
 const query = reactive({ year: new Date().getFullYear(), month: null, projectId: null, clientName: null })
 const tableData = ref([])
 
@@ -60,6 +65,11 @@ const allowNumber = (v) => {
   const dotIdx = s.indexOf('.')
   if (dotIdx !== -1) s = s.substring(0, dotIdx + 1) + s.substring(dotIdx + 1).replace(/\./g, '')
   return s === '' ? 0 : s
+}
+
+const onClientChange = () => {
+  query.projectId = null
+  loadData()
 }
 
 const loadData = async () => {
@@ -117,7 +127,7 @@ const handleExport = async () => {
 onMounted(async () => {
   try {
     const [projRes, clientRes] = await Promise.all([getProjects(), getClients()])
-    projects.value = projRes.data.data || []
+    allProjects.value = projRes.data.data || []
     clients.value = clientRes.data.data || []
   } catch { /* ignore */ }
   loadData()

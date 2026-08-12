@@ -7,8 +7,8 @@
           <template #header>
             <div class="card-header">
               <span>支出项目列表</span>
-              <div><el-button type="success" @click="expImportVisible = true; expFile = null">导入Excel</el-button>
-              <el-button type="primary" @click="handleAddExpense">新增支出项目</el-button></div>
+              <div><el-button type="success" @click="expImportVisible = true; expFile = null" v-if="hasPerm('config:expense:import')">导入Excel</el-button>
+              <el-button type="primary" @click="handleAddExpense" v-if="hasPerm('config:expense:create')">新增支出项目</el-button></div>
             </div>
           </template>
           <el-table :data="expenseList" v-loading="expLoading" stripe>
@@ -25,8 +25,8 @@
             <el-table-column prop="sortOrder" label="排序" width="70" />
             <el-table-column label="操作" width="180" fixed="right">
               <template #default="{ row }">
-                <el-button type="primary" size="small" @click="handleEditExpense(row)">编辑</el-button>
-                <el-button type="danger" size="small" @click="handleDeleteExpense(row)">删除</el-button>
+                <el-button type="primary" size="small" @click="handleEditExpense(row)" v-if="hasPerm('config:expense:edit')">编辑</el-button>
+                <el-button type="danger" size="small" @click="handleDeleteExpense(row)" v-if="hasPerm('config:expense:delete')">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -39,8 +39,8 @@
           <template #header>
             <div class="card-header">
               <span>增值税项目列表</span>
-              <div><el-button type="success" @click="vatImportVisible = true; vatFile = null">导入Excel</el-button>
-              <el-button type="primary" @click="handleAddVat">新增增值税项目</el-button></div>
+              <div><el-button type="success" @click="vatImportVisible = true; vatFile = null" v-if="hasPerm('config:vat:import')">导入Excel</el-button>
+              <el-button type="primary" @click="handleAddVat" v-if="hasPerm('config:vat:create')">新增增值税项目</el-button></div>
             </div>
           </template>
           <el-table :data="vatList" v-loading="vatLoading" stripe>
@@ -58,8 +58,8 @@
             </el-table-column>
             <el-table-column label="操作" width="180" fixed="right">
               <template #default="{ row }">
-                <el-button type="primary" size="small" @click="handleEditVat(row)">编辑</el-button>
-                <el-button type="danger" size="small" @click="handleDeleteVat(row)">删除</el-button>
+                <el-button type="primary" size="small" @click="handleEditVat(row)" v-if="hasPerm('config:vat:edit')">编辑</el-button>
+                <el-button type="danger" size="small" @click="handleDeleteVat(row)" v-if="hasPerm('config:vat:delete')">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -171,8 +171,10 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getExpenseItems, addExpenseItem, updateExpenseItem, deleteExpenseItem, getVatItems, addVatItem, updateVatItem, deleteVatItem, importExpenseItems, importVatItems } from '../api'
+import { getExpenseItems, addExpenseItem, updateExpenseItem, deleteExpenseItem, getVatItems, addVatItem, updateVatItem, deleteVatItem, importExpenseItems, importVatItems, permissionStore } from '../api'
 import { Upload, Download } from '@element-plus/icons-vue'
+
+const hasPerm = (code) => permissionStore.has(code)
 
 const activeTab = ref('expense')
 const catLabel = (c) => ({ MATERIAL: '材料', LABOR: '劳务', MACHINERY: '机械', TRAVEL: '差旅', SUBCONTRACT: '分包', MANAGEMENT: '管理', OTHER: '其他' }[c] || c || '-')

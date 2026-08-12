@@ -44,7 +44,7 @@ export const updateUser = (user) => api.put('/users', user)
 export const deleteUser = (id) => api.delete(`/users/${id}`)
 
 // ==================== 项目管理 ====================
-export const getProjects = () => api.get('/projects')
+export const getProjects = (params) => api.get('/projects', { params })
 export const getProjectById = (id) => api.get(`/projects/${id}`)
 export const getProjectByCode = (code) => api.get(`/projects/code/${code}`)
 export const getProjectsByStatus = (status) => api.get(`/projects/status/${status}`)
@@ -64,7 +64,7 @@ export const updateClient = (data) => api.put('/clients', data)
 export const deleteClient = (id) => api.delete(`/clients/${id}`)
 
 // ==================== 项目成本详情 ====================
-export const getProjectCosts = () => api.get('/project-costs')
+export const getProjectCosts = (params) => api.get('/project-costs', { params })
 export const getProjectCostById = (id) => api.get(`/project-costs/${id}`)
 export const getProjectCostsByProject = (projectId) => api.get(`/project-costs/project/${projectId}`)
 export const addProjectCost = (data) => api.post('/project-costs', data)
@@ -80,7 +80,7 @@ export const exportProjectCosts = (projectId) => {
 export const getProjectRevenueSummary = (projectId) => api.get(`/project-costs/revenue-summary/${projectId}`)
 
 // ==================== 项目预算 ====================
-export const getProjectBudgets = () => api.get('/project-budgets')
+export const getProjectBudgets = (params) => api.get('/project-budgets', { params })
 export const getProjectBudgetById = (id) => api.get(`/project-budgets/${id}`)
 export const getProjectBudgetsByProject = (projectId) => api.get(`/project-budgets/project/${projectId}`)
 export const addProjectBudget = (data) => api.post('/project-budgets', data)
@@ -114,7 +114,7 @@ export const updateSettlementTaxInvoiceAmount = (settlementTaxId, issuedInvoiceA
   api.put(`/project-payments/settlement-tax/${settlementTaxId}/invoice`, { issuedInvoiceAmount })
 
 // ==================== 回款/结算/开票操作历史 ====================
-export const getPaymentGroupedList = (projectId) => api.get('/payment-operations/grouped', { params: projectId ? { projectId } : {} })
+export const getPaymentGroupedList = (projectId, clientName) => api.get('/payment-operations/grouped', { params: { projectId: projectId || undefined, clientName: clientName || undefined } })
 export const getPaymentOperationsByProject = (projectId, operationType) =>
   api.get('/payment-operations/history', { params: { projectId, operationType } })
 export const getPaymentOperationStats = (projectId) => api.get(`/payment-operations/stats/${projectId}`)
@@ -166,6 +166,11 @@ export const exportInputTaxReport = (params) => api.get('/reports/input-tax/expo
 export const exportCashFlowReport = (params) => api.get('/reports/cash-flow/export', { params, responseType: 'blob', timeout: 60000 })
 export const exportProfitReport = (params) => api.get('/reports/profit/export', { params, responseType: 'blob', timeout: 60000 })
 
+// ==================== 数据备份 ====================
+export const getBackups = () => api.get('/backups')
+export const backupNow = () => api.post('/backups')
+export const downloadBackup = (fileName) => api.get(`/backups/download/${encodeURIComponent(fileName)}`, { responseType: 'blob', timeout: 120000 })
+
 // ==================== 操作日志 ====================
 export const getOperationLogs = (params) => api.get('/operation-logs', { params })
 export const getLogModules = () => api.get('/operation-logs/modules')
@@ -180,3 +185,15 @@ export const getAllPermissions = () => api.get('/permissions')
 export const getRolePermissions = (roleId) => api.get(`/permissions/roles/${roleId}/permissions`)
 export const assignRolePermissions = (roleId, permissionIds) => api.put(`/permissions/roles/${roleId}/permissions`, { permissionIds })
 export const getMyPermissions = () => api.get('/permissions/my')
+
+// ==================== 结算单附件 ====================
+export const uploadSettlementDocs = (id, files) => {
+  const fd = new FormData()
+  files.forEach(f => fd.append('files', f))
+  return api.post(`/payment-operations/${id}/settlement-docs`, fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60000
+  })
+}
+export const getSettlementDocs = (id) => api.get(`/payment-operations/${id}/settlement-docs`)
+export const deleteSettlementDoc = (docId) => api.delete(`/payment-operations/settlement-docs/${docId}`)

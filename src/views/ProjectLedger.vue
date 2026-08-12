@@ -37,35 +37,35 @@
           </template>
         </el-table-column>
         <el-table-column prop="budgetAmount" label="合同预算" width="110" align="right" fixed>
-          <template #default="{ row }">{{ fmt(row.budgetAmount) }}</template>
+          <template #default="{ row }">{{ fmtCell(row, row.budgetAmount) }}</template>
         </el-table-column>
 
         <el-table-column label="以前年度情况" align="center">
           <el-table-column prop="priorTotal" label="以前年度" width="100" align="right">
-            <template #default="{ row }">{{ fmt(row.priorTotal) }}</template>
+            <template #default="{ row }">{{ fmtCell(row, row.priorTotal) }}</template>
           </el-table-column>
           <el-table-column prop="priorPriorYear" label="上上年" width="100" align="right">
-            <template #default="{ row }">{{ fmt(row.priorPriorYear) }}</template>
+            <template #default="{ row }">{{ fmtCell(row, row.priorPriorYear) }}</template>
           </el-table-column>
           <el-table-column prop="priorYear" label="上年" width="100" align="right">
-            <template #default="{ row }">{{ fmt(row.priorYear) }}</template>
+            <template #default="{ row }">{{ fmtCell(row, row.priorYear) }}</template>
           </el-table-column>
           <el-table-column prop="priorSum" label="以前年度情况合计" width="130" align="right">
-            <template #default="{ row }">{{ fmt(row.priorSum) }}</template>
+            <template #default="{ row }">{{ fmtCell(row, row.priorSum) }}</template>
           </el-table-column>
         </el-table-column>
 
         <el-table-column :label="query.year + '年'" align="center">
           <el-table-column v-for="m in 12" :key="'m'+m" :prop="'m'+m" :label="m+'月'" width="90" align="right">
-            <template #default="{ row }">{{ fmt(row['m'+m]) }}</template>
+            <template #default="{ row }">{{ fmtCell(row, row['m'+m]) }}</template>
           </el-table-column>
         </el-table-column>
 
         <el-table-column prop="yearTotal" label="本年累计" width="110" align="right">
-          <template #default="{ row }">{{ fmt(row.yearTotal) }}</template>
+          <template #default="{ row }">{{ fmtCell(row, row.yearTotal) }}</template>
         </el-table-column>
         <el-table-column prop="cumulativeTotal" label="累计完成" width="110" align="right">
-          <template #default="{ row }">{{ fmt(row.cumulativeTotal) }}</template>
+          <template #default="{ row }">{{ fmtCell(row, row.cumulativeTotal) }}</template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="120" show-overflow-tooltip />
       </el-table>
@@ -87,6 +87,10 @@ const report = reactive({ projectId: null, projectCode: '', projectName: '', yea
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
 
+// 指标情况、结算情况为纯标题行，不显示任何金额数据
+const blankRows = ['指标情况', '结算情况']
+const fmtCell = (row, v) => blankRows.includes(row.itemName) ? '' : fmt(v)
+
 const allowNumber = (v) => {
   let s = String(v).replace(/[^\d.]/g, '')
   const dotIdx = s.indexOf('.')
@@ -96,8 +100,8 @@ const allowNumber = (v) => {
   return s === '' ? 0 : s
 }
 
-// 分类标题行（加粗显示）：项目支出、合同总额、指标情况、应交增值税
-const categoryHeaders = [1, 9, 12, 19]
+// 分类标题行（加粗显示）：项目支出、指标情况、结算情况
+const categoryHeaders = [1, 12, 15]
 
 // 分类下的明细行（左侧缩进）
 // 项目支出 2-8，合同总额 10-11，指标情况 13-14，应交增值税 20-23

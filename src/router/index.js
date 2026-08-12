@@ -85,6 +85,11 @@ const routes = [
         component: () => import('../views/ClientManage.vue')
       },
       {
+        path: 'backups',
+        name: 'DataBackup',
+        component: () => import('../views/DataBackup.vue')
+      },
+      {
         path: 'operation-logs',
         name: 'OperationLog',
         component: () => import('../views/OperationLog.vue')

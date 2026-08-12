@@ -214,7 +214,7 @@ const loadData = async () => {
       const { data } = await getProjectBudgetsByProject(selectedProjectId.value)
       list.value = data.data || []
     } else {
-      const { data } = await getProjectBudgets()
+      const { data } = await getProjectBudgets(selectedClientName.value ? { clientName: selectedClientName.value } : undefined)
       list.value = data.data || []
     }
   } catch { ElMessage.error('获取数据失败') }

@@ -117,16 +117,15 @@
         <el-form-item label="日期" prop="operationDate">
           <el-date-picker v-model="settlementForm.operationDate" type="date" value-format="YYYY-MM-DD" style="width:220px" />
         </el-form-item>
-        <el-divider content-position="left">结算税率明细</el-divider>
-        <el-table :data="settlementForm.taxDetails" size="small" stripe style="margin-bottom:12px">
-          <el-table-column label="税目" width="200">
+        <el-divider content-position="left">结算税率明细（来自项目配置）</el-divider>
+        <el-alert v-if="projectRevenueTaxes.length === 0 && !revenueTaxLoading" title="该项目尚未配置税率明细，请先在「项目管理」中为该项目添加税率" type="warning" show-icon :closable="false" style="margin-bottom:8px" />
+        <el-table :data="settlementForm.taxDetails" size="small" stripe style="margin-bottom:12px" v-loading="revenueTaxLoading">
+          <el-table-column label="税目" width="160">
             <template #default="{ row }">
-              <el-select v-model="row.vatConfigId" placeholder="选择税目" size="small" style="width:100%" @change="(v) => onSettlementVatChange(row, v)">
-                <el-option v-for="v in activeVatItems" :key="v.id" :label="v.itemName + ' (' + v.taxRate + '%)'" :value="v.id" />
-              </el-select>
+              <span>{{ row.itemName }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="taxRate" label="税率%" width="70" align="right">
+          <el-table-column label="税率%" width="70" align="right">
             <template #default="{ row }">{{ row.taxRate }}</template>
           </el-table-column>
           <el-table-column label="结算金额" width="140">
@@ -142,13 +141,7 @@
           <el-table-column label="税额" width="100" align="right">
             <template #default="{ row }">{{ calcSettlementTax(row) }}</template>
           </el-table-column>
-          <el-table-column label="" width="60" align="center">
-            <template #default="{ $index }">
-              <el-button type="danger" size="small" circle @click="settlementForm.taxDetails.splice($index, 1)">×</el-button>
-            </template>
-          </el-table-column>
         </el-table>
-        <el-button type="primary" size="small" plain @click="addSettlementTaxRow">+ 添加税率明细</el-button>
         <el-form-item label="结算合计" style="margin-top:12px">
           <span style="font-weight:bold;font-size:16px">{{ fmt(settlementTotalAmount) }}</span>
         </el-form-item>
@@ -157,11 +150,41 @@
         </el-form-item>
         <el-alert v-if="settlementValidationWarning" :title="settlementValidationWarning" type="warning" show-icon :closable="false" style="margin-top:8px" />
       </el-form>
+      <el-divider content-position="left">结算单附件</el-divider>
+      <el-upload
+        ref="settlementUploadRef"
+        multiple
+        :auto-upload="false"
+        :limit="9"
+        accept="image/*,.pdf"
+        :on-change="handleSettlementFileChange"
+        :on-exceed="() => ElMessage.warning('\u6700\u591a\u4e0a\u4f209\u4e2a\u6587\u4ef6')"
+        list-type="picture-card"
+        style="margin-bottom:12px"
+      >
+        <el-icon><Plus /></el-icon>
+      </el-upload>
       <el-divider content-position="left">结算历史</el-divider>
       <el-table :data="settlementHistory" v-loading="settlementHistoryLoading" size="small" max-height="220" stripe style="margin-top:8px">
         <el-table-column prop="operationDate" label="日期" width="110" />
         <el-table-column prop="amount" label="金额" width="120" align="right">
           <template #default="{ row }">{{ fmt(row.amount) }}</template>
+        </el-table-column>
+        <el-table-column label="结算单" width="160">
+          <template #default="{ row }">
+            <template v-if="settlementDocsMap[row.id] && settlementDocsMap[row.id].length > 0">
+              <el-image
+                v-for="doc in settlementDocsMap[row.id]"
+                :key="doc.id"
+                :src="getDocUrl(doc)"
+                :preview-src-list="settlementDocsMap[row.id].map(d => getDocUrl(d))"
+                style="width:50px;height:50px;margin-right:4px;cursor:pointer"
+                fit="cover"
+                preview-teleported
+              />
+            </template>
+            <span v-else>-</span>
+          </template>
         </el-table-column>
         <el-table-column label="税率明细" min-width="200">
           <template #default="{ row }">
@@ -305,6 +328,20 @@
         <el-table-column prop="amount" label="金额" width="110" align="right">
           <template #default="{ row }">{{ fmt(row.amount) }}</template>
         </el-table-column>
+        <el-table-column label="结算单" width="160">
+          <template #default="{ row }">
+            <template v-if="row.operationType === 'SETTLEMENT' && historyDocsMap[row.id] && historyDocsMap[row.id].length > 0">
+              <el-image
+                v-for="doc in historyDocsMap[row.id]" :key="doc.id"
+                :src="getDocUrl(doc)"
+                :preview-src-list="historyDocsMap[row.id].map(d => getDocUrl(d))"
+                style="width:50px;height:50px;margin-right:4px;cursor:pointer"
+                fit="cover" preview-teleported
+              />
+            </template>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="operationDate" label="日期" width="110" />
         <el-table-column label="税率明细" min-width="280">
           <template #default="{ row }">
@@ -373,8 +410,8 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProjects, getClients, importProjectPayments, exportProjectPayments, getPaymentGroupedList, getPaymentOperationsByProject, addPaymentOperation, deletePaymentOperation, getPaymentSettlements, getSettlementTaxDetails, getInvoiceableTaxDetails, getActiveVatItems, permissionStore, loadPermissionsFromCache } from '../api'
-import { Upload, Download } from '@element-plus/icons-vue'
+import { getProjects, getClients, importProjectPayments, exportProjectPayments, getPaymentGroupedList, getPaymentOperationsByProject, addPaymentOperation, deletePaymentOperation, getPaymentSettlements, getSettlementTaxDetails, getInvoiceableTaxDetails, getProjectRevenueTax, getActiveVatItems, uploadSettlementDocs, getSettlementDocs, deleteSettlementDoc, permissionStore, loadPermissionsFromCache } from '../api'
+import { Upload, Download, Plus } from '@element-plus/icons-vue'
 
 loadPermissionsFromCache()
 const hasPerm = (code) => permissionStore.has(code)
@@ -413,7 +450,7 @@ const operationTagType = (t) => ({ PAYMENT: 'success', SETTLEMENT: 'warning', IN
 const loadGroupedData = async () => {
   loading.value = true
   try {
-    const { data } = await getPaymentGroupedList(selectedProjectId.value || undefined)
+    const { data } = await getPaymentGroupedList(selectedProjectId.value || undefined, selectedClientName.value || undefined)
     groupedList.value = (data.data || []).map(r => ({
       ...r, contractAmount: Number(r.contractAmount || 0), revenueWithTax: Number(r.revenueWithTax || 0),
       revenueWithoutTax: Number(r.revenueWithoutTax || 0), totalPayment: Number(r.totalPayment || 0),
@@ -451,6 +488,9 @@ const paymentHistory = ref([])
 const paymentHistoryLoading = ref(false)
 const settlementHistory = ref([])
 const settlementHistoryLoading = ref(false)
+const settlementFiles = ref([])
+const settlementUploadRef = ref(null)
+const settlementDocsMap = ref({})
 const invoiceHistory = ref([])
 const invoiceHistoryLoading = ref(false)
 
@@ -512,6 +552,16 @@ const loadSettlementHistory = async (projectId) => {
   try {
     const { data } = await getPaymentOperationsByProject(projectId, 'SETTLEMENT')
     settlementHistory.value = data.data || []
+    // 加载每条结算记录的附件
+    if (settlementHistory.value.length > 0) {
+      const docPromises = settlementHistory.value.map(row =>
+        getSettlementDocs(row.id).then(res => ({ id: row.id, docs: res.data?.data || [] })).catch(() => ({ id: row.id, docs: [] }))
+      )
+      const docResults = await Promise.all(docPromises)
+      const docsMap = {}
+      docResults.forEach(({ id, docs }) => { if (docs.length > 0) docsMap[id] = docs })
+      settlementDocsMap.value = docsMap
+    }
   } catch { settlementHistory.value = [] }
   finally { settlementHistoryLoading.value = false }
 }
@@ -563,6 +613,8 @@ const settlementDialogVisible = ref(false)
 const settlementLoading = ref(false)
 const settlementFormRef = ref(null)
 const settlementForm = reactive({ operationDate: '', remark: '', taxDetails: [] })
+const projectRevenueTaxes = ref([])
+const revenueTaxLoading = ref(false)
 
 const settlementTotalAmount = computed(() => {
   return settlementForm.taxDetails.reduce((sum, d) => sum + Number(d.settlementAmount || 0), 0)
@@ -584,45 +636,75 @@ const settlementValidationWarning = computed(() => {
 const calcSettlementTax = (row) => {
   const amt = Number(row.invoiceAmount || 0)
   const rate = Number(row.taxRate || 0)
-  return (amt * rate / 100).toFixed(2)
+  // 税额 = 含税金额 / (1+税率) * 税率 = 含税金额 * 税率 / (100+税率)
+  return (amt * rate / (100 + rate)).toFixed(2)
 }
 
-const onSettlementVatChange = (row, vatConfigId) => {
-  const item = activeVatItems.value.find(v => v.id === vatConfigId)
-  if (item) { row.itemName = item.itemName; row.taxRate = Number(item.taxRate) }
+const getDocUrl = (doc) => {
+  const normalizedPath = doc.filePath.replace(/\\/g, '/')
+  const storedName = normalizedPath.substring(normalizedPath.lastIndexOf('/') + 1)
+  return '/settlement-docs/' + doc.operationLogId + '/' + storedName
 }
 
-const addSettlementTaxRow = () => {
-  settlementForm.taxDetails.push({ vatConfigId: null, itemName: '', taxRate: 0, settlementAmount: 0, invoiceAmount: 0 })
+const handleSettlementFileChange = (uploadFile) => {
+  settlementFiles.value.push(uploadFile.raw)
 }
 
-const openSettlementDialog = (row) => {
+const openSettlementDialog = async (row) => {
   currentProjectRow.value = row
   settlementForm.operationDate = ''
   settlementForm.remark = ''
   settlementForm.taxDetails = []
+  settlementFiles.value = []
+  settlementUploadRef.value?.clearFiles()
+  projectRevenueTaxes.value = []
+  revenueTaxLoading.value = true
+  try {
+    const { data } = await getProjectRevenueTax(row.projectId)
+    projectRevenueTaxes.value = data.data || []
+    // 将项目税率填充为结算税率明细（结算金额/发票金额初始为0）
+    settlementForm.taxDetails = projectRevenueTaxes.value.map(pt => ({
+      vatConfigId: pt.vatConfigId, itemName: pt.itemName, taxRate: Number(pt.taxRate),
+      settlementAmount: 0, invoiceAmount: 0
+    }))
+  } catch { projectRevenueTaxes.value = [] }
+  finally { revenueTaxLoading.value = false }
   loadSettlementHistory(row.projectId)
   settlementDialogVisible.value = true
 }
 
 const submitSettlement = async () => {
-  if (settlementForm.taxDetails.length === 0) { ElMessage.warning('请添加税率明细'); return }
+  // 过滤掉结算金额和发票金额均为0的行
+  const nonZeroDetails = settlementForm.taxDetails.filter(d =>
+    Number(d.settlementAmount || 0) > 0 || Number(d.invoiceAmount || 0) > 0
+  )
+  if (nonZeroDetails.length === 0) { ElMessage.warning('请至少填写一条税率明细的结算金额或发票金额'); return }
   if (!settlementForm.operationDate) { ElMessage.warning('请选择日期'); return }
   settlementLoading.value = true
   try {
-    const taxDetails = settlementForm.taxDetails.map(d => ({
+    const taxDetails = nonZeroDetails.map(d => ({
       vatConfigId: d.vatConfigId, itemName: d.itemName, taxRate: Number(d.taxRate),
       settlementAmount: Number(d.settlementAmount || 0),
       invoiceAmount: Number(d.invoiceAmount || 0),
       issuedInvoiceAmount: 0
     }))
-    await addPaymentOperation({
+    const { data: addRes } = await addPaymentOperation({
       projectId: currentProjectRow.value.projectId, operationType: 'SETTLEMENT',
-      amount: settlementTotalAmount.value, operationDate: settlementForm.operationDate,
+      amount: taxDetails.reduce((s, d) => s + d.settlementAmount, 0), operationDate: settlementForm.operationDate,
       remark: settlementForm.remark, taxDetails
     })
+    // 上传结算单附件
+    const settlementId = addRes?.data?.id
+    if (settlementId && settlementFiles.value.length > 0) {
+      try {
+        await uploadSettlementDocs(settlementId, settlementFiles.value)
+      } catch (e) {
+        console.error('结算单上传失败', e)
+      }
+    }
     ElMessage.success('结算成功')
     settlementDialogVisible.value = false
+    settlementFiles.value = []
     loadGroupedData()
     loadSettlementHistory(currentProjectRow.value.projectId)
   } catch (e) { ElMessage.error(e.response?.data?.message || '操作失败') }
@@ -644,13 +726,28 @@ const canInvoiceRow = (row) => Number(row.invoiceAmount || 0) > Number(row.issue
 const openInvoiceDialog = async (row) => {
   currentProjectRow.value = row
   invoiceableList.value = []
+  invoiceHistory.value = []
   invoiceableLoading.value = true
+  invoiceHistoryLoading.value = true
   try {
-    const { data } = await getInvoiceableTaxDetails(row.projectId)
-    invoiceableList.value = data.data || []
+    const [invRes, histRes] = await Promise.all([
+      getInvoiceableTaxDetails(row.projectId),
+      getPaymentOperationsByProject(row.projectId, 'INVOICE')
+    ])
+    invoiceableList.value = invRes.data?.data || []
+    invoiceHistory.value = histRes.data?.data || []
+    if (invoiceableList.value.length === 0) {
+      if (invoiceHistory.value.length === 0) {
+        ElMessage.warning('暂无结算税率明细，请先点击「结算」录入结算税率明细')
+        return
+      }
+      ElMessage.info('所有发票均已开票完毕，以下为历史开票记录')
+    }
   } catch { /* ignore */ }
-  finally { invoiceableLoading.value = false }
-  loadInvoiceHistory(row.projectId)
+  finally {
+    invoiceableLoading.value = false
+    invoiceHistoryLoading.value = false
+  }
   invoiceDialogVisible.value = true
 }
 
@@ -694,11 +791,13 @@ const historyList = ref([])
 const historyProjectId = ref(null)
 const historyProjectName = ref('')
 const historyTypeFilter = ref('')
+const historyDocsMap = ref({})
 
 const showHistory = (row) => {
   historyProjectId.value = row.projectId
   historyProjectName.value = row.projectName
   historyTypeFilter.value = ''
+  historyDocsMap.value = {}
   historyDialogVisible.value = true
   loadHistory()
 }
@@ -709,6 +808,17 @@ const loadHistory = async () => {
     const type = historyTypeFilter.value || undefined
     const { data } = await getPaymentOperationsByProject(historyProjectId.value, type)
     historyList.value = data.data || []
+    // 加载结算记录附件
+    const settlementRows = historyList.value.filter(r => r.operationType === 'SETTLEMENT')
+    if (settlementRows.length > 0) {
+      const docPromises = settlementRows.map(row =>
+        getSettlementDocs(row.id).then(res => ({ id: row.id, docs: res.data?.data || [] })).catch(() => ({ id: row.id, docs: [] }))
+      )
+      const docResults = await Promise.all(docPromises)
+      const docsMap = {}
+      docResults.forEach(({ id, docs }) => { if (docs.length > 0) docsMap[id] = docs })
+      historyDocsMap.value = docsMap
+    }
   } catch { ElMessage.error('获取操作历史失败') }
   finally { historyLoading.value = false }
 }

@@ -8,7 +8,7 @@
             <el-select v-model="selectedClientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
             </el-select>
-            <el-select v-model="selectedProjectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px">
+            <el-select v-model="selectedProjectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px" @change="loadData">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
             <el-button type="success" @click="importDialogVisible = true; selectedFile = null" v-if="hasPerm('project:import')">导入Excel</el-button>
@@ -125,12 +125,12 @@
       </el-form>
 
       <!-- 项目税率明细 -->
-      <el-divider content-position="left" v-if="isEdit">项目税率明细</el-divider>
-      <div v-if="isEdit" style="margin-bottom:12px">
+      <el-divider content-position="left">项目税率明细</el-divider>
+      <div style="margin-bottom:12px">
         <el-button size="small" type="primary" @click="addTaxRow">添加税目</el-button>
-        <el-button size="small" @click="saveTaxDetails" :loading="taxSaving">保存税率明细</el-button>
+        <el-button v-if="isEdit" size="small" @click="saveTaxDetails" :loading="taxSaving">保存税率明细</el-button>
       </div>
-      <el-table v-if="isEdit" :data="taxDetails" size="small" stripe border style="margin-bottom:16px">
+      <el-table :data="taxDetails" size="small" stripe border style="margin-bottom:16px">
         <el-table-column label="税目名称" min-width="140">
           <template #default="{ row }">
             <el-select v-model="row.vatConfigId" placeholder="选择税目" size="small" style="width:100%" @change="(v) => onVatItemChange(row, v)">
@@ -191,7 +191,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getProjects, addProject, updateProject, deleteProject, importProjects, getProjectRevenueTax, saveProjectRevenueTax, getActiveVatItems, getBudgetSumCostSubtotal, getClients, permissionStore } from '../api'
 import { Upload, Download } from '@element-plus/icons-vue'
@@ -220,6 +220,7 @@ const filteredList = computed(() => {
 
 const onClientChange = () => {
   selectedProjectId.value = null
+  loadData()
 }
 
 const form = reactive({
@@ -280,7 +281,8 @@ const searchClients = async (keyword) => {
 const calcTax = (row) => {
   const amt = Number(row.invoiceAmount || 0)
   const rate = Number(row.taxRate || 0)
-  return (amt * rate / 100).toFixed(2)
+  // 税额 = 含税金额 / (1+税率) * 税率 = 含税金额 * 税率 / (100+税率)
+  return (amt * rate / (100 + rate)).toFixed(2)
 }
 
 const totalTax = computed(() => taxDetails.value.reduce((sum, r) => sum + Number(calcTax(r)), 0))
@@ -289,6 +291,9 @@ const recalcRevenue = () => {
   form.revenueWithTax = Number(form.contractAmount || 0)
   form.revenueWithoutTax = Number(form.contractAmount || 0) - totalTax.value
 }
+
+// 税目变化时联动更新营业收入(含税/除税)
+watch(taxDetails, recalcRevenue, { deep: true })
 
 const addTaxRow = () => {
   taxDetails.value.push({ vatConfigId: null, itemName: '', taxRate: 0, invoiceAmount: 0, taxAmount: 0, remark: '' })
@@ -325,7 +330,10 @@ const statusTag = (s) => ({ IN_PROGRESS: '', COMPLETED: 'success', SUSPENDED: 'w
 const loadData = async () => {
   loading.value = true
   try {
-    const { data } = await getProjects()
+    const { data } = await getProjects({
+      clientName: selectedClientName.value || undefined,
+      projectId: selectedProjectId.value || undefined
+    })
     allProjects.value = data.data || []
     list.value = data.data || []
   } catch { ElMessage.error('获取数据失败') }
@@ -337,13 +345,14 @@ const resetForm = () => {
   taxDetails.value = []
 }
 
-const handleAdd = () => { resetForm(); isEdit.value = false; dialogVisible.value = true; searchClients('') }
+const handleAdd = () => { resetForm(); isEdit.value = false; dialogVisible.value = true; formRef.value?.clearValidate(); searchClients('') }
 
 const handleEdit = async (row) => {
   resetForm()
   isEdit.value = true
   Object.keys(form).forEach(k => { if (row[k] !== undefined) form[k] = row[k] })
   dialogVisible.value = true
+  formRef.value?.clearValidate()
   searchClients('')
   await loadTaxDetails(row.id)
   matchVatConfigIds()
@@ -356,9 +365,15 @@ const handleEdit = async (row) => {
 
 const matchVatConfigIds = () => {
   taxDetails.value.forEach(row => {
-    if (!row.vatConfigId && row.itemName) {
-      const item = activeVatItems.value.find(v => v.itemName === row.itemName)
-      if (item) row.vatConfigId = item.id
+    if (!row.vatConfigId) {
+      if (row.itemName) {
+        const item = activeVatItems.value.find(v => v.itemName === row.itemName)
+        if (item) { row.vatConfigId = item.id; return }
+      }
+      if (row.taxRate != null) {
+        const item = activeVatItems.value.find(v => Number(v.taxRate) === Number(row.taxRate))
+        if (item) { row.vatConfigId = item.id; row.itemName = item.itemName }
+      }
     }
   })
 }
@@ -370,9 +385,18 @@ const handleSubmit = async () => {
   try {
     if (isEdit.value) { await updateProject(form); ElMessage.success('更新成功') }
     else {
+      recalcRevenue()
       const { data } = await addProject(form)
+      if (data.code !== 200) { ElMessage.error(data.message || '新增失败'); return }
       ElMessage.success('新增成功')
-      if (data.data) { form.id = data.data; isEdit.value = true; await loadTaxDetails(form.id) }
+      form.id = data.data.id
+      // 新增时一并保存税目明细
+      const items = taxDetails.value
+        .filter(r => r.itemName || r.vatConfigId || Number(r.invoiceAmount) > 0 || Number(r.taxRate) > 0)
+        .map(r => ({ itemName: r.itemName, taxRate: r.taxRate, invoiceAmount: r.invoiceAmount, taxAmount: Number(calcTax(r)), remark: r.remark }))
+      try {
+        if (items.length) await saveProjectRevenueTax(form.id, items)
+      } catch { ElMessage.warning('项目已创建，但税率明细保存失败，可编辑项目后重试') }
     }
     dialogVisible.value = false; loadData()
   } catch { ElMessage.error('操作失败') }
