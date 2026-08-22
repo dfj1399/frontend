@@ -1,7 +1,11 @@
 import axios from 'axios'
 
+// 自动检测部署上下文：根路径 / 或 /project/
+// 必须用绝对路径，否则在二级路由页面(如 /reports/receivable)下相对路径会被解析到 /reports/api/...
+const apiBase = window.location.pathname.startsWith('/project') ? '/project/api' : '/api'
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.DEV ? '/api' : apiBase,
   timeout: 10000
 })
 

@@ -103,8 +103,11 @@ const routes = [
   }
 ]
 
+// 自动检测部署上下文：根路径 / 或 /project/
+const routerBase = window.location.pathname.startsWith('/project') ? '/project/' : '/'
+
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(routerBase),
   routes
 })
 
