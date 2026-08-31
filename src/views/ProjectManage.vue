@@ -176,7 +176,7 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <el-link type="primary" :underline="false" href="/api/templates/project" target="_blank">
+            <el-link type="primary" :underline="false" :href="getTemplateUrl('project')" target="_blank">
               <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
             </el-link>
           </div>
@@ -193,7 +193,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProjects, addProject, updateProject, deleteProject, importProjects, getProjectRevenueTax, saveProjectRevenueTax, getActiveVatItems, getBudgetSumCostSubtotal, getClients, permissionStore } from '../api'
+import { getProjects, addProject, updateProject, deleteProject, importProjects, getProjectRevenueTax, saveProjectRevenueTax, getActiveVatItems, getBudgetSumCostSubtotal, getClients, permissionStore, getTemplateUrl } from '../api'
 import { Upload, Download } from '@element-plus/icons-vue'
 
 const loading = ref(false)

@@ -393,7 +393,7 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <el-link type="primary" :underline="false" href="/api/templates/project-payment" target="_blank">
+            <el-link type="primary" :underline="false" :href="getTemplateUrl('project-payment')" target="_blank">
               <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
             </el-link>
           </div>
@@ -410,7 +410,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProjects, getClients, importProjectPayments, exportProjectPayments, getPaymentGroupedList, getPaymentOperationsByProject, addPaymentOperation, deletePaymentOperation, getPaymentSettlements, getSettlementTaxDetails, getInvoiceableTaxDetails, getProjectRevenueTax, getActiveVatItems, uploadSettlementDocs, getSettlementDocs, deleteSettlementDoc, permissionStore, loadPermissionsFromCache } from '../api'
+import { getProjects, getClients, importProjectPayments, exportProjectPayments, getPaymentGroupedList, getPaymentOperationsByProject, addPaymentOperation, deletePaymentOperation, getPaymentSettlements, getSettlementTaxDetails, getInvoiceableTaxDetails, getProjectRevenueTax, getActiveVatItems, uploadSettlementDocs, getSettlementDocs, deleteSettlementDoc, permissionStore, loadPermissionsFromCache, getTemplateUrl } from '../api'
 import { Upload, Download, Plus } from '@element-plus/icons-vue'
 
 loadPermissionsFromCache()
@@ -643,7 +643,8 @@ const calcSettlementTax = (row) => {
 const getDocUrl = (doc) => {
   const normalizedPath = doc.filePath.replace(/\\/g, '/')
   const storedName = normalizedPath.substring(normalizedPath.lastIndexOf('/') + 1)
-  return '/settlement-docs/' + doc.operationLogId + '/' + storedName
+  const ctxPath = window.location.pathname.startsWith('/project') ? '/project' : ''
+  return ctxPath + '/settlement-docs/' + doc.operationLogId + '/' + storedName
 }
 
 const handleSettlementFileChange = (uploadFile) => {
@@ -849,7 +850,7 @@ const handleImport = async () => {
   } catch (e) { ElMessage.error('导入失败：' + (e.response?.data?.message || e.message)) }
   finally { importLoading.value = false; selectedFile.value = null }
 }
-const handleDownloadTemplate = () => { window.open('/api/templates/project-payment', '_blank') }
+const handleDownloadTemplate = () => { window.open(getTemplateUrl('project-payment'), '_blank') }
 const handleExport = async () => {
   try {
     const res = await exportProjectPayments(selectedProjectId.value)

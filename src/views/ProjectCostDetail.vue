@@ -123,7 +123,7 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <el-link type="primary" :underline="false" href="/api/templates/expense-items" target="_blank">
+            <el-link type="primary" :underline="false" :href="getTemplateUrl('expense-items')" target="_blank">
               <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
             </el-link>
           </div>
@@ -140,7 +140,7 @@
 <script setup>
 import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProjects, getClients, getProjectCosts, getProjectCostsByProject, addProjectCost, updateProjectCost, deleteProjectCost, importProjectCosts, exportProjectCosts } from '../api'
+import { getProjects, getClients, getProjectCosts, getProjectCostsByProject, addProjectCost, updateProjectCost, deleteProjectCost, importProjectCosts, exportProjectCosts, getTemplateUrl } from '../api'
 import { Upload, Download } from '@element-plus/icons-vue'
 
 const loading = ref(false); const submitLoading = ref(false); const dialogVisible = ref(false); const isEdit = ref(false)
@@ -276,7 +276,7 @@ const handleImport = async () => {
   } catch (e) { ElMessage.error('导入失败：' + (e.response?.data?.message || e.message)) }
   finally { importLoading.value = false; selectedFile.value = null }
 }
-const handleDownloadTemplate = () => { window.open('/api/templates/expense-items', '_blank') }
+const handleDownloadTemplate = () => { window.open(getTemplateUrl('expense-items'), '_blank') }
 const handleExport = async () => {
   try {
     const res = await exportProjectCosts(selectedProjectId.value)

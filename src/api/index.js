@@ -9,6 +9,12 @@ const api = axios.create({
   timeout: 10000
 })
 
+// 模板下载 URL（自动适配部署上下文：根路径 / 或 /project/）
+export const getTemplateUrl = (type) => {
+  const base = import.meta.env.DEV ? '/api' : apiBase
+  return base + '/templates/' + type
+}
+
 // 请求拦截器：自动注入操作人 + 读取权限
 api.interceptors.request.use(config => {
   const user = JSON.parse(sessionStorage.getItem('user') || '{}')
