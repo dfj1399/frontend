@@ -81,6 +81,12 @@
           <el-col :span="12">
             <el-form-item label="预计成本"><el-input :model-value="form.estimatedCost" @input="(v) => form.estimatedCost = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="手续费费率">
+              <el-input :model-value="form.handlingFeeRate" @input="(v) => form.handlingFeeRate = allowNumber(v)" placeholder="请输入数字" style="width:calc(100% - 24px)" />
+              <span style="margin-left:4px;color:#606266">%</span>
+            </el-form-item>
+          </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
@@ -88,6 +94,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="质保金"><el-input :model-value="form.deposit" @input="(v) => form.deposit = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item>
+            <el-form-item label="质保金到账日期"><el-date-picker v-model="form.depositMaturityDate" type="date" placeholder="选择日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
@@ -100,7 +107,11 @@
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="负责人"><el-input v-model="form.owner" /></el-form-item>
+            <el-form-item label="负责人">
+              <el-select v-model="form.owner" filterable allow-create clearable placeholder="选择或输入负责人" style="width:100%">
+                <el-option v-for="o in owners" :key="o.ownerName" :label="o.ownerName" :value="o.ownerName" />
+              </el-select>
+            </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="状态">
@@ -193,7 +204,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProjects, addProject, updateProject, deleteProject, importProjects, getProjectRevenueTax, saveProjectRevenueTax, getActiveVatItems, getBudgetSumCostSubtotal, getClients, permissionStore, getTemplateUrl } from '../api'
+import { getProjects, addProject, updateProject, deleteProject, importProjects, getProjectRevenueTax, saveProjectRevenueTax, getActiveVatItems, getBudgetSumCostSubtotal, getClients, getProjectOwners, permissionStore, getTemplateUrl } from '../api'
 import { Upload, Download } from '@element-plus/icons-vue'
 
 const loading = ref(false)
@@ -205,6 +216,7 @@ const list = ref([])
 
 const allProjects = ref([])
 const clients = ref([])
+const owners = ref([])
 const selectedClientName = ref(null)
 const selectedProjectId = ref(null)
 
@@ -225,8 +237,8 @@ const onClientChange = () => {
 
 const form = reactive({
   id: null, projectCode: '', projectName: '', clientName: '', contractNo: '',
-  contractAmount: 0, settlementAmount: 0, deposit: 0, depositPeriod: '',
-  totalBudget: 0, estimatedCost: 0, revenueWithTax: 0, revenueWithoutTax: 0,
+  contractAmount: 0, settlementAmount: 0, deposit: 0, depositPeriod: '', depositMaturityDate: '',
+  totalBudget: 0, estimatedCost: 0, handlingFeeRate: 0, revenueWithTax: 0, revenueWithoutTax: 0,
   status: 'IN_PROGRESS', owner: '', startDate: '', endDate: '',
   actualEndDate: '', remark: ''
 })
@@ -313,13 +325,14 @@ const saveTaxDetails = async () => {
     const items = taxDetails.value.map(r => ({
       itemName: r.itemName, taxRate: r.taxRate, invoiceAmount: r.invoiceAmount, taxAmount: Number(calcTax(r)), remark: r.remark
     }))
-    await saveProjectRevenueTax(form.id, items)
+    const { data: taxRes } = await saveProjectRevenueTax(form.id, items)
+    if (taxRes.code !== 200) { ElMessage.error(taxRes.message || '保存税率明细失败'); return }
     ElMessage.success('税率明细保存成功')
     const { data } = await getProjectRevenueTax(form.id)
     taxDetails.value = data.data || []
     recalcRevenue()
     loadData()
-  } catch { ElMessage.error('保存税率明细失败') }
+  } catch (e) { ElMessage.error(e.response?.data?.message || '保存税率明细失败') }
   finally { taxSaving.value = false }
 }
 
@@ -341,7 +354,7 @@ const loadData = async () => {
 }
 
 const resetForm = () => {
-  Object.assign(form, { id: null, projectCode: '', projectName: '', clientName: '', contractNo: '', contractAmount: 0, settlementAmount: 0, deposit: 0, depositPeriod: '', totalBudget: 0, estimatedCost: 0, revenueWithTax: 0, revenueWithoutTax: 0, status: 'IN_PROGRESS', owner: '', startDate: '', endDate: '', actualEndDate: '', remark: '' })
+  Object.assign(form, { id: null, projectCode: '', projectName: '', clientName: '', contractNo: '', contractAmount: 0, settlementAmount: 0, deposit: 0, depositPeriod: '', depositMaturityDate: '', totalBudget: 0, estimatedCost: 0, handlingFeeRate: 0, revenueWithTax: 0, revenueWithoutTax: 0, status: 'IN_PROGRESS', owner: '', startDate: '', endDate: '', actualEndDate: '', remark: '' })
   taxDetails.value = []
 }
 
@@ -381,9 +394,14 @@ const matchVatConfigIds = () => {
 const handleSubmit = async () => {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
+  // 质保金和到账日期联动校验
+  if ((form.deposit > 0 && !form.depositMaturityDate) || (!form.deposit && form.depositMaturityDate)) {
+    ElMessage.warning('质保金和质保金到账日期必须同时填写')
+    return
+  }
   submitLoading.value = true
   try {
-    if (isEdit.value) { await updateProject(form); ElMessage.success('更新成功') }
+    if (isEdit.value) { const { data: upData } = await updateProject(form); if (upData.code !== 200) { ElMessage.error(upData.message || '更新失败'); return }; ElMessage.success('更新成功') }
     else {
       recalcRevenue()
       const { data } = await addProject(form)
@@ -399,7 +417,7 @@ const handleSubmit = async () => {
       } catch { ElMessage.warning('项目已创建，但税率明细保存失败，可编辑项目后重试') }
     }
     dialogVisible.value = false; loadData()
-  } catch { ElMessage.error('操作失败') }
+  } catch (e) { ElMessage.error(e.response?.data?.message || e.message || '操作失败') }
   finally { submitLoading.value = false }
 }
 
@@ -431,10 +449,11 @@ const handleImport = async () => {
 }
 onMounted(async () => {
   try {
-    const [projRes, clientRes] = await Promise.all([getProjects(), getClients()])
+    const [projRes, clientRes, ownerRes] = await Promise.all([getProjects(), getClients(), getProjectOwners()])
     allProjects.value = projRes.data.data || []
     list.value = projRes.data.data || []
     clients.value = clientRes.data.data || []
+    owners.value = ownerRes.data.data || []
   } catch { /* ignore */ }
   loadVatItems()
 })

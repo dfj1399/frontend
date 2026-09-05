@@ -40,7 +40,7 @@
         <el-table-column prop="periodManagementFee" label="期间管理" width="100" align="right"><template #default="{ row }">{{ fmt(row.periodManagementFee) }}</template></el-table-column>
         <el-table-column prop="periodFinancialFee" label="期间财务" width="100" align="right"><template #default="{ row }">{{ fmt(row.periodFinancialFee) }}</template></el-table-column>
         <el-table-column prop="projectCostAmount" label="项目成本支出(含税)" width="150" align="right"><template #default="{ row }">{{ fmt(row.projectCostAmount) }}</template></el-table-column>
-        <el-table-column prop="loanAmount" label="借款" width="100" align="right"><template #default="{ row }">{{ fmt(row.loanAmount) }}</template></el-table-column>
+        <el-table-column prop="loanAmount" label="借款费用" width="100" align="right"><template #default="{ row }">{{ fmt(row.loanAmount) }}</template></el-table-column>
         <el-table-column prop="fundsOccupation" label="资金占用" width="100" align="right"><template #default="{ row }">{{ fmt(row.fundsOccupation) }}</template></el-table-column>
         <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
         <el-table-column label="操作" width="180" fixed="right">
@@ -95,8 +95,8 @@
           <el-col :span="8"><el-form-item label="期间财务"><el-input :model-value="form.periodFinancialFee" @input="(v) => form.periodFinancialFee = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="8"><el-form-item label="项目成本支出"><el-input :model-value="fmt(form.costSubtotal)" disabled style="width:100%" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="借款"><el-input :model-value="form.loanAmount" @input="(v) => form.loanAmount = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="项目成本支出"><el-input :model-value="form.projectCostAmount" @input="(v) => form.projectCostAmount = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="借款费用"><el-input :model-value="form.loanAmount" @input="(v) => form.loanAmount = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="资金占用"><el-input :model-value="form.fundsOccupation" @input="(v) => form.fundsOccupation = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
         </el-row>
         <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>

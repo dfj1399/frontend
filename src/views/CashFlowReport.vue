@@ -11,8 +11,16 @@
             <el-select v-model="query.projectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
-            <el-input :model-value="query.year" @input="(v) => query.year = allowNumber(v)" placeholder="年" style="width:110px;margin-right:8px" />
-            <el-input :model-value="query.month" @input="(v) => query.month = allowNumber(v)" placeholder="月(可选)" style="width:120px;margin-right:8px" />
+            <el-select v-model="query.owner" placeholder="选择负责人" clearable style="width:140px;margin-right:8px" @change="onOwnerChange">
+              <el-option v-for="o in owners" :key="o.ownerName" :label="o.ownerName" :value="o.ownerName" />
+            </el-select>
+
+            <el-select v-model="query.year" placeholder="选择年份" clearable style="width:120px;margin-right:8px">
+              <el-option v-for="y in years" :key="y" :label="y + '年'" :value="y" />
+            </el-select>
+            <el-select v-model="query.month" placeholder="选择月份" clearable style="width:120px;margin-right:8px">
+              <el-option v-for="m in 12" :key="m" :label="m + '月'" :value="m" />
+            </el-select>
             <el-button type="primary" @click="loadData" :loading="loading">查询</el-button>
             <el-button @click="handleExport" :loading="exporting">导出</el-button>
           </div>
@@ -28,12 +36,11 @@
         <el-table-column prop="invoicedAmount" label="已票金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.invoicedAmount) }}</template></el-table-column>
         <el-table-column prop="notInvoicedAmount" label="未票金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.notInvoicedAmount) }}</template></el-table-column>
         <el-table-column prop="receivedAmount" label="收回款项" width="110" align="right"><template #default="{ row }">{{ fmt(row.receivedAmount) }}</template></el-table-column>
-        <el-table-column prop="costAmount" label="成本费用" width="110" align="right"><template #default="{ row }">{{ fmt(row.costAmount) }}</template></el-table-column>
+        <el-table-column prop="costAmount" label="项目成本支出" width="120" align="right"><template #default="{ row }">{{ fmt(row.costAmount) }}</template></el-table-column>
         <el-table-column prop="outputTax" label="应交增值税" width="110" align="right"><template #default="{ row }">{{ fmt(row.outputTax) }}</template></el-table-column>
         <el-table-column prop="businessTax" label="营业税及附加" width="120" align="right"><template #default="{ row }">{{ fmt(row.businessTax) }}</template></el-table-column>
-        <el-table-column prop="costPayment" label="成本支付" width="110" align="right"><template #default="{ row }">{{ fmt(row.costPayment) }}</template></el-table-column>
         <el-table-column prop="handlingFee" label="手续费" width="100" align="right"><template #default="{ row }">{{ fmt(row.handlingFee) }}</template></el-table-column>
-        <el-table-column prop="managementFee" label="管理费用" width="110" align="right"><template #default="{ row }">{{ fmt(row.managementFee) }}</template></el-table-column>
+        <el-table-column prop="managementFee" label="期间费用" width="110" align="right"><template #default="{ row }">{{ fmt(row.managementFee) }}</template></el-table-column>
         <el-table-column prop="loanAmount" label="借款金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.loanAmount) }}</template></el-table-column>
         <el-table-column prop="fundsOccupation" label="资金占用" width="110" align="right"><template #default="{ row }">{{ fmt(row.fundsOccupation) }}</template></el-table-column>
         <el-table-column prop="fundBalance" label="资金结余" width="110" align="right"><template #default="{ row }">{{ fmt(row.fundBalance) }}</template></el-table-column>
@@ -45,17 +52,21 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getProjects, getClients, getCashFlowReport, exportCashFlowReport } from '../api'
+import { getProjects, getClients, getProjectOwners, getCashFlowReport, exportCashFlowReport } from '../api'
 
 const loading = ref(false)
 const exporting = ref(false)
 const allProjects = ref([])
 const clients = ref([])
+const owners = ref([])
 const projects = computed(() => {
-  if (!query.clientName) return allProjects.value
-  return allProjects.value.filter(p => p.clientName === query.clientName)
+  let list = allProjects.value
+  if (query.clientName) list = list.filter(p => p.clientName === query.clientName)
+  if (query.owner) list = list.filter(p => p.owner === query.owner)
+  return list
 })
-const query = reactive({ year: new Date().getFullYear(), month: null, projectId: null, clientName: null })
+const query = reactive({ year: new Date().getFullYear(), month: null, projectId: null, clientName: null, owner: null })
+const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i)
 const tableData = ref([])
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
@@ -72,6 +83,11 @@ const onClientChange = () => {
   loadData()
 }
 
+const onOwnerChange = () => {
+  query.projectId = null
+  loadData()
+}
+
 const loadData = async () => {
   loading.value = true
   const params = {}
@@ -79,6 +95,7 @@ const loadData = async () => {
   if (query.month) params.month = query.month
   if (query.projectId) params.projectId = query.projectId
   if (query.clientName) params.clientName = query.clientName
+  if (query.owner) params.owner = query.owner
   try {
     const { data } = await getCashFlowReport(params)
     tableData.value = data.data || []
@@ -90,7 +107,7 @@ const loadData = async () => {
 }
 
 const getSummary = ({ columns, data }) => {
-  const sumKeys = ['contractAmount','receivableBalance','invoicedAmount','notInvoicedAmount','receivedAmount','costAmount','outputTax','businessTax','costPayment','handlingFee','managementFee','loanAmount','fundsOccupation','fundBalance']
+  const sumKeys = ['contractAmount','receivableBalance','invoicedAmount','notInvoicedAmount','receivedAmount','costAmount','outputTax','businessTax','handlingFee','managementFee','loanAmount','fundsOccupation','fundBalance']
   const sums = {}
   sumKeys.forEach(k => { sums[k] = data.reduce((a, r) => a + Number(r[k] || 0), 0) })
   return columns.map((c, i) => {
@@ -108,6 +125,7 @@ const handleExport = async () => {
     if (query.month) params.month = query.month
     if (query.projectId) params.projectId = query.projectId
     if (query.clientName) params.clientName = query.clientName
+  if (query.owner) params.owner = query.owner
     const { data } = await exportCashFlowReport(params)
     const url = window.URL.createObjectURL(new Blob([data]))
     const link = document.createElement('a')
@@ -126,9 +144,10 @@ const handleExport = async () => {
 
 onMounted(async () => {
   try {
-    const [projRes, clientRes] = await Promise.all([getProjects(), getClients()])
+    const [projRes, clientRes, ownerRes] = await Promise.all([getProjects(), getClients(), getProjectOwners()])
     allProjects.value = projRes.data.data || []
     clients.value = clientRes.data.data || []
+    owners.value = ownerRes.data.data || []
   } catch { /* ignore */ }
   loadData()
 })

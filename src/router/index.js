@@ -85,6 +85,11 @@ const routes = [
         component: () => import('../views/ClientManage.vue')
       },
       {
+        path: 'owners',
+        name: 'OwnerManage',
+        component: () => import('../views/OwnerManage.vue')
+      },
+      {
         path: 'backups',
         name: 'DataBackup',
         component: () => import('../views/DataBackup.vue')

@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>项目回款记录</span>
+          <span>项目结算回款</span>
           <div>
             <el-select v-model="selectedClientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
@@ -382,7 +382,7 @@
     </el-dialog>
 
     <!-- Excel导入弹窗 -->
-    <el-dialog v-model="importDialogVisible" title="导入项目回款记录Excel" width="450px">
+    <el-dialog v-model="importDialogVisible" title="导入项目结算回款Excel" width="450px">
       <el-upload
         ref="uploadRef" drag :auto-upload="false" :limit="1" accept=".xlsx,.xls"
         :on-change="handleFileChange"
@@ -853,10 +853,13 @@ const handleImport = async () => {
 const handleDownloadTemplate = () => { window.open(getTemplateUrl('project-payment'), '_blank') }
 const handleExport = async () => {
   try {
-    const res = await exportProjectPayments(selectedProjectId.value)
+    const params = {}
+    if (selectedProjectId.value) params.projectId = selectedProjectId.value
+    if (selectedClientName.value) params.clientName = selectedClientName.value
+    const res = await exportProjectPayments(params)
     const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = URL.createObjectURL(blob); const a = document.createElement('a')
-    a.href = url; a.download = '项目回款记录.xlsx'; document.body.appendChild(a); a.click()
+    a.href = url; a.download = '项目结算回款.xlsx'; document.body.appendChild(a); a.click()
     document.body.removeChild(a); URL.revokeObjectURL(url); ElMessage.success('导出成功')
   } catch (e) { ElMessage.error('导出失败：' + (e.response?.data?.message || e.message)) }
 }

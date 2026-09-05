@@ -11,8 +11,10 @@
             <el-select v-model="query.projectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
-            <el-input :model-value="query.year" @input="(v) => query.year = allowNumber(v)" placeholder="年" style="width:110px;margin-right:8px" />
-            <el-input :model-value="query.month" @input="(v) => query.month = allowNumber(v)" placeholder="月(可选)" style="width:120px;margin-right:8px" />
+            <el-select v-model="query.owner" placeholder="选择负责人" clearable style="width:140px;margin-right:8px" @change="onOwnerChange">
+              <el-option v-for="o in owners" :key="o.ownerName" :label="o.ownerName" :value="o.ownerName" />
+            </el-select>
+
             <el-button type="primary" @click="loadData" :loading="loading">查询</el-button>
             <el-button @click="handleExport" :loading="exporting">导出</el-button>
           </div>
@@ -47,17 +49,20 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getProjects, getClients, getPaymentMonthReport, exportPaymentMonthReport } from '../api'
+import { getProjects, getClients, getProjectOwners, getPaymentMonthReport, exportPaymentMonthReport } from '../api'
 
 const loading = ref(false)
 const exporting = ref(false)
 const allProjects = ref([])
 const clients = ref([])
+const owners = ref([])
 const projects = computed(() => {
-  if (!query.clientName) return allProjects.value
-  return allProjects.value.filter(p => p.clientName === query.clientName)
+  let list = allProjects.value
+  if (query.clientName) list = list.filter(p => p.clientName === query.clientName)
+  if (query.owner) list = list.filter(p => p.owner === query.owner)
+  return list
 })
-const query = reactive({ year: new Date().getFullYear(), month: null, projectId: null, clientName: null })
+const query = reactive({ projectId: null, clientName: null, owner: null })
 const tableData = ref([])
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
@@ -74,13 +79,18 @@ const onClientChange = () => {
   loadData()
 }
 
+const onOwnerChange = () => {
+  query.projectId = null
+  loadData()
+}
+
 const loadData = async () => {
   loading.value = true
   const params = {}
   if (query.year) params.year = query.year
-  if (query.month) params.month = query.month
   if (query.projectId) params.projectId = query.projectId
   if (query.clientName) params.clientName = query.clientName
+  if (query.owner) params.owner = query.owner
   try {
     const { data } = await getPaymentMonthReport(params)
     tableData.value = data.data || []
@@ -96,9 +106,9 @@ const handleExport = async () => {
   try {
     const params = {}
     if (query.year) params.year = query.year
-    if (query.month) params.month = query.month
     if (query.projectId) params.projectId = query.projectId
     if (query.clientName) params.clientName = query.clientName
+  if (query.owner) params.owner = query.owner
     const { data } = await exportPaymentMonthReport(params)
     const url = window.URL.createObjectURL(new Blob([data]))
     const link = document.createElement('a')
@@ -117,9 +127,10 @@ const handleExport = async () => {
 
 onMounted(async () => {
   try {
-    const [projRes, clientRes] = await Promise.all([getProjects(), getClients()])
+    const [projRes, clientRes, ownerRes] = await Promise.all([getProjects(), getClients(), getProjectOwners()])
     allProjects.value = projRes.data.data || []
     clients.value = clientRes.data.data || []
+    owners.value = ownerRes.data.data || []
   } catch { /* ignore */ }
   loadData()
 })

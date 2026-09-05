@@ -26,7 +26,7 @@
         </el-menu-item>
         <el-menu-item index="/project-payments">
           <el-icon><DataAnalysis /></el-icon>
-          <span>项目回款记录</span>
+          <span>项目结算回款</span>
         </el-menu-item>
         <el-sub-menu index="/reports">
           <template #title>
@@ -70,6 +70,10 @@
           <el-icon><OfficeBuilding /></el-icon>
           <span>客户管理</span>
         </el-menu-item>
+        <el-menu-item index="/owners" v-if="hasPerm('owner:view')">
+          <el-icon><Avatar /></el-icon>
+          <span>负责人管理</span>
+        </el-menu-item>
         <el-menu-item index="/backups" v-if="hasPerm('backup:view')">
           <el-icon><FolderOpened /></el-icon>
           <span>数据备份</span>
@@ -102,7 +106,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { House, Money, TrendCharts, DataAnalysis, Setting, User, Document, DocumentCopy, OfficeBuilding, Clock, Lock, CreditCard, Tickets, Coin, Notebook, PieChart, FolderOpened } from '@element-plus/icons-vue'
+import { House, Money, TrendCharts, DataAnalysis, Setting, User, Document, DocumentCopy, OfficeBuilding, Clock, Lock, CreditCard, Tickets, Coin, Notebook, PieChart, FolderOpened, Avatar } from '@element-plus/icons-vue'
 import { permissionStore, loadPermissionsFromCache } from '../api'
 
 loadPermissionsFromCache()

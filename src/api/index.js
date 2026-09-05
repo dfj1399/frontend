@@ -73,6 +73,19 @@ export const addClient = (data) => api.post('/clients', data)
 export const updateClient = (data) => api.put('/clients', data)
 export const deleteClient = (id) => api.delete(`/clients/${id}`)
 
+export const importClients = (file) => {
+  const fd = new FormData(); fd.append('file', file)
+  return api.post('/clients/import', fd, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 60000 })
+}
+export const exportClients = () => api.get('/clients/export', { responseType: 'blob', timeout: 60000 })
+export const checkClientDuplicate = (params) => api.get('/clients/check-duplicate', { params })
+
+// ==================== 负责人管理 ====================
+export const getProjectOwners = () => api.get('/project-owners')
+export const addProjectOwner = (data) => api.post('/project-owners', data)
+export const updateProjectOwner = (data) => api.put('/project-owners', data)
+export const deleteProjectOwner = (id) => api.delete(`/project-owners/${id}`)
+
 // ==================== 项目成本详情 ====================
 export const getProjectCosts = (params) => api.get('/project-costs', { params })
 export const getProjectCostById = (id) => api.get(`/project-costs/${id}`)
@@ -105,7 +118,7 @@ export const exportProjectBudgets = (projectId) => {
 }
 export const getBudgetSumCostSubtotal = (projectId) => api.get(`/project-budgets/sum-cost-subtotal/${projectId}`)
 
-// ==================== 项目回款记录 ====================
+// ==================== 项目结算回款 ====================
 export const getProjectPayments = () => api.get('/project-payments')
 export const getProjectPaymentById = (id) => api.get(`/project-payments/${id}`)
 export const getProjectPaymentsByProject = (projectId) => api.get(`/project-payments/project/${projectId}`)
@@ -116,8 +129,8 @@ export const importProjectPayments = (file, operator = 'admin') => {
   const fd = new FormData(); fd.append('file', file); fd.append('operator', operator)
   return api.post('/project-payments/import', fd, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 60000 })
 }
-export const exportProjectPayments = (projectId) => {
-  return api.get('/project-payments/export', { params: projectId ? { projectId } : {}, responseType: 'blob', timeout: 60000 })
+export const exportProjectPayments = (params) => {
+  return api.get('/project-payments/export', { params, responseType: 'blob', timeout: 60000 })
 }
 export const getPaymentTaxDetails = (id) => api.get(`/project-payments/${id}/tax-details`)
 export const updateSettlementTaxInvoiceAmount = (settlementTaxId, issuedInvoiceAmount) =>

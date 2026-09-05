@@ -17,6 +17,7 @@
       <div v-if="report.projectCode" class="project-info">
         <span>工程编号：{{ report.projectCode }}</span>
         <span>工程名称：{{ report.projectName }}</span>
+        <span v-if="report.owner">负责人：{{ report.owner }}</span>
         <span>查询年度：{{ report.year }}年</span>
       </div>
 
@@ -83,7 +84,7 @@ import { getProjects, getProjectLedgerReport } from '../api'
 const loading = ref(false)
 const projects = ref([])
 const query = reactive({ year: new Date().getFullYear(), projectId: null })
-const report = reactive({ projectId: null, projectCode: '', projectName: '', year: null, rows: [] })
+const report = reactive({ projectId: null, projectCode: '', projectName: '', owner: '', year: null, rows: [] })
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
 
@@ -127,6 +128,7 @@ const loadData = async () => {
     report.projectId = r.projectId
     report.projectCode = r.projectCode
     report.projectName = r.projectName
+    report.owner = r.owner || ''
     report.year = r.year
     report.rows = r.rows || []
   } catch (e) {
