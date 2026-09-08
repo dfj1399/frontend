@@ -33,7 +33,7 @@
         <el-table-column prop="clientName" label="客户名称" width="110" />
         <el-table-column prop="contractAmount" label="合同金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
         <el-table-column prop="settlementAmount" label="结算金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.settlementAmount) }}</template></el-table-column>
-        <el-table-column prop="revenueWithoutTax" label="营业收入(不含税)" width="130" align="right"><template #default="{ row }">{{ fmt(row.revenueWithoutTax) }}</template></el-table-column>
+        <el-table-column prop="revenueWithoutTax" label="结算收入（除税）" width="130" align="right"><template #default="{ row }">{{ fmt(row.revenueWithoutTax) }}</template></el-table-column>
         <el-table-column prop="businessTax" label="营业税及附加" width="120" align="right"><template #default="{ row }">{{ fmt(row.businessTax) }}</template></el-table-column>
         <el-table-column label="营业成本" align="center">
           <el-table-column prop="actualCost" label="实际发生" width="110" align="right"><template #default="{ row }">{{ fmt(row.actualCost) }}</template></el-table-column>

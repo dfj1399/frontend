@@ -25,8 +25,8 @@
         <el-table-column prop="clientName" label="客户名称" width="110" show-overflow-tooltip />
         <el-table-column prop="contractAmount" label="合同金额" width="120" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
         <el-table-column prop="recordDate" label="记录日期" width="110" />
-        <el-table-column prop="revenueWithTax" label="营业收入" width="120" align="right"><template #default="{ row }">{{ fmt(row.revenueWithTax) }}</template></el-table-column>
-        <el-table-column prop="revenueWithoutTax" label="营业收入除税" width="120" align="right"><template #default="{ row }">{{ fmt(row.revenueWithoutTax) }}</template></el-table-column>
+        <el-table-column prop="revenueWithTax" label="结算收入" width="120" align="right"><template #default="{ row }">{{ fmt(row.revenueWithTax) }}</template></el-table-column>
+        <el-table-column prop="revenueWithoutTax" label="结算收入（除税）" width="120" align="right"><template #default="{ row }">{{ fmt(row.revenueWithoutTax) }}</template></el-table-column>
         <el-table-column prop="settlementAmount" label="结算金额" width="120" align="right"><template #default="{ row }">{{ fmt(row.settlementAmount) }}</template></el-table-column>
         <el-table-column prop="directMaterialCost" label="直接材料" width="110" align="right"><template #default="{ row }">{{ fmt(row.directMaterialCost) }}</template></el-table-column>
         <el-table-column prop="directLaborCost" label="直接劳务" width="110" align="right"><template #default="{ row }">{{ fmt(row.directLaborCost) }}</template></el-table-column>
@@ -41,6 +41,7 @@
         <el-table-column prop="periodFinancialFee" label="期间财务" width="100" align="right"><template #default="{ row }">{{ fmt(row.periodFinancialFee) }}</template></el-table-column>
         <el-table-column prop="projectCostAmount" label="项目成本支出(含税)" width="150" align="right"><template #default="{ row }">{{ fmt(row.projectCostAmount) }}</template></el-table-column>
         <el-table-column prop="loanAmount" label="借款费用" width="100" align="right"><template #default="{ row }">{{ fmt(row.loanAmount) }}</template></el-table-column>
+        <el-table-column prop="grossMarginRate" label="毛利率(%)" width="100" align="right"><template #default="{ row }">{{ row.grossMarginRate != null ? Number(row.grossMarginRate).toFixed(2) : '-' }}</template></el-table-column>
         <el-table-column prop="fundsOccupation" label="资金占用" width="100" align="right"><template #default="{ row }">{{ fmt(row.fundsOccupation) }}</template></el-table-column>
         <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
         <el-table-column label="操作" width="180" fixed="right">
@@ -71,10 +72,10 @@
         <el-row :gutter="16">
           <el-col :span="8"><el-form-item label="年"><el-input :model-value="form.recordYear" @input="(v) => form.recordYear = allowNumber(v)" style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="月"><el-input :model-value="form.recordMonth" @input="(v) => form.recordMonth = allowNumber(v)" style="width:100%" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="营业收入"><el-input :model-value="fmt(form.revenueWithTax)" disabled style="width:100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="结算收入"><el-input :model-value="fmt(form.revenueWithTax)" disabled style="width:100%" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="8"><el-form-item label="营业收入除税"><el-input :model-value="fmt(form.revenueWithoutTax)" disabled style="width:100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="结算收入（除税）"><el-input :model-value="fmt(form.revenueWithoutTax)" disabled style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="结算金额"><el-input :model-value="fmt(form.settlementAmount)" disabled style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="直接材料"><el-input :model-value="form.directMaterialCost" @input="(v) => form.directMaterialCost = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="直接劳务"><el-input :model-value="form.directLaborCost" @input="(v) => form.directLaborCost = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
@@ -97,6 +98,7 @@
         <el-row :gutter="16">
           <el-col :span="8"><el-form-item label="项目成本支出"><el-input :model-value="form.projectCostAmount" @input="(v) => form.projectCostAmount = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="借款费用"><el-input :model-value="form.loanAmount" @input="(v) => form.loanAmount = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="毛利率(%)"><el-input :model-value="form.grossMarginRate != null ? Number(form.grossMarginRate).toFixed(2) : '-'" disabled style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="资金占用"><el-input :model-value="form.fundsOccupation" @input="(v) => form.fundsOccupation = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
         </el-row>
         <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
@@ -160,7 +162,7 @@ const onClientChange = () => {
   loadData()
 }
 
-const form = reactive({ id: null, projectId: null, recordDate: '', recordYear: null, recordMonth: null, revenueWithTax: 0, revenueWithoutTax: 0, settlementAmount: 0, directMaterialCost: 0, directLaborCost: 0, directMachineryCost: 0, directExpense: 0, indirectManagementFee: 0, otherCost: 0, costSubtotal: 0, operatingProfit: 0, inputTax: 0, periodManagementFee: 0, periodFinancialFee: 0, projectCostAmount: 0, loanAmount: 0, fundsOccupation: 0, remark: '', createdBy: '', updatedBy: '' })
+const form = reactive({ id: null, projectId: null, recordDate: '', recordYear: null, recordMonth: null, revenueWithTax: 0, revenueWithoutTax: 0, settlementAmount: 0, directMaterialCost: 0, directLaborCost: 0, directMachineryCost: 0, directExpense: 0, indirectManagementFee: 0, otherCost: 0, costSubtotal: 0, operatingProfit: 0, inputTax: 0, periodManagementFee: 0, periodFinancialFee: 0, projectCostAmount: 0, loanAmount: 0, fundsOccupation: 0, grossMarginRate: 0, remark: '', createdBy: '', updatedBy: '' })
 const rules = { projectId: [{ required: true, message: '请选择项目', trigger: 'change' }], recordDate: [{ required: true, message: '请选择日期', trigger: 'change' }] }
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
@@ -194,10 +196,18 @@ const onProjectChange = (projectId) => {
 }
 
 watch(
-  () => [form.directMaterialCost, form.directLaborCost, form.directMachineryCost, form.directExpense, form.indirectManagementFee, form.otherCost, form.revenueWithTax],
+  () => [form.directMaterialCost, form.directLaborCost, form.directMachineryCost, form.directExpense, form.indirectManagementFee, form.otherCost, form.revenueWithTax, form.revenueWithoutTax, form.periodManagementFee, form.periodFinancialFee],
   () => {
     form.costSubtotal = Number(form.directMaterialCost || 0) + Number(form.directLaborCost || 0) + Number(form.directMachineryCost || 0) + Number(form.directExpense || 0) + Number(form.indirectManagementFee || 0) + Number(form.otherCost || 0)
     form.operatingProfit = Number(form.revenueWithTax || 0) - Number(form.costSubtotal || 0)
+    // 毛利率 = (成本合计 + 期间管理 + 期间财务) / 结算收入（除税）
+    const revWithoutTax = Number(form.revenueWithoutTax || 0)
+    if (revWithoutTax > 0) {
+      const numerator = Number(form.costSubtotal || 0) + Number(form.periodManagementFee || 0) + Number(form.periodFinancialFee || 0)
+      form.grossMarginRate = (numerator / revWithoutTax * 100).toFixed(2)
+    } else {
+      form.grossMarginRate = 0
+    }
   }
 )
 
@@ -223,7 +233,7 @@ const loadData = async () => {
   finally { loading.value = false }
 }
 
-const resetForm = () => { Object.assign(form, { id: null, projectId: null, recordDate: '', recordYear: null, recordMonth: null, revenueWithTax: 0, revenueWithoutTax: 0, settlementAmount: 0, directMaterialCost: 0, directLaborCost: 0, directMachineryCost: 0, directExpense: 0, indirectManagementFee: 0, otherCost: 0, costSubtotal: 0, operatingProfit: 0, inputTax: 0, periodManagementFee: 0, periodFinancialFee: 0, projectCostAmount: 0, loanAmount: 0, fundsOccupation: 0, remark: '', createdBy: '', updatedBy: '' }) }
+const resetForm = () => { Object.assign(form, { id: null, projectId: null, recordDate: '', recordYear: null, recordMonth: null, revenueWithTax: 0, revenueWithoutTax: 0, settlementAmount: 0, directMaterialCost: 0, directLaborCost: 0, directMachineryCost: 0, directExpense: 0, indirectManagementFee: 0, otherCost: 0, costSubtotal: 0, operatingProfit: 0, inputTax: 0, periodManagementFee: 0, periodFinancialFee: 0, projectCostAmount: 0, loanAmount: 0, fundsOccupation: 0, grossMarginRate: 0, remark: '', createdBy: '', updatedBy: '' }) }
 
 const handleAdd = () => { resetForm(); isEdit.value = false; dialogVisible.value = true }
 const handleEdit = (row) => { resetForm(); isEdit.value = true; Object.keys(form).forEach(k => { if (row[k] !== undefined) form[k] = row[k] }); dialogVisible.value = true }
@@ -249,7 +259,7 @@ const handleDelete = (row) => {
 const getSummary = ({ columns, data }) => {
   const sums = []; columns.forEach((c, i) => {
     if (i === 0) { sums[i] = '合计'; return }
-    if (['revenueWithTax', 'revenueWithoutTax', 'settlementAmount', 'directMaterialCost', 'directLaborCost', 'directMachineryCost', 'directExpense', 'indirectManagementFee', 'otherCost', 'costSubtotal', 'operatingProfit', 'inputTax', 'periodManagementFee', 'periodFinancialFee', 'projectCostAmount', 'loanAmount', 'fundsOccupation'].includes(c.property)) {
+    if (['contractAmount', 'revenueWithTax', 'revenueWithoutTax', 'settlementAmount', 'directMaterialCost', 'directLaborCost', 'directMachineryCost', 'directExpense', 'indirectManagementFee', 'otherCost', 'costSubtotal', 'operatingProfit', 'inputTax', 'periodManagementFee', 'periodFinancialFee', 'projectCostAmount', 'loanAmount', 'fundsOccupation'].includes(c.property)) {
       const v = data.reduce((a, r) => a + Number(r[c.property] || 0), 0)
       sums[i] = v.toLocaleString('zh-CN', { minimumFractionDigits: 2 })
     } else sums[i] = ''

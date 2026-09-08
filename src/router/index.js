@@ -21,14 +21,14 @@ const routes = [
         component: () => import('../views/ProjectManage.vue')
       },
       {
-        path: 'project-costs',
-        name: 'ProjectCostDetail',
-        component: () => import('../views/ProjectCostDetail.vue')
-      },
-      {
         path: 'project-budgets',
         name: 'ProjectBudget',
         component: () => import('../views/ProjectBudget.vue')
+      },
+      {
+        path: 'project-costs',
+        name: 'ProjectCostDetail',
+        component: () => import('../views/ProjectCostDetail.vue')
       },
       {
         path: 'project-payments',

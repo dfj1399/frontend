@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>项目管理</span>
+          <span>项目合同管理</span>
           <div>
             <el-select v-model="selectedClientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
@@ -20,13 +20,16 @@
         <el-table-column prop="projectName" label="项目名称" min-width="150" />
         <el-table-column prop="clientName" label="客户名称" width="120" />
         <el-table-column prop="contractNo" label="合同编号" width="120" />
+        <el-table-column prop="startDate" label="合同签订日期" width="120">
+          <template #default="{ row }">{{ row.startDate || '-' }}</template>
+        </el-table-column>
         <el-table-column prop="contractAmount" label="合同金额" width="120" align="right">
           <template #default="{ row }">{{ formatMoney(row.contractAmount) }}</template>
         </el-table-column>
-        <el-table-column prop="revenueWithTax" label="营业收入(含税)" width="130" align="right">
+        <el-table-column prop="revenueWithTax" label="结算收入" width="130" align="right">
           <template #default="{ row }">{{ formatMoney(row.revenueWithTax) }}</template>
         </el-table-column>
-        <el-table-column prop="revenueWithoutTax" label="营业收入(除税)" width="130" align="right">
+        <el-table-column prop="revenueWithoutTax" label="开票总额" width="130" align="right">
           <template #default="{ row }">{{ formatMoney(row.revenueWithoutTax) }}</template>
         </el-table-column>
         <el-table-column prop="estimatedCost" label="预计成本" width="120" align="right">
@@ -47,7 +50,7 @@
       </el-table>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑项目' : '新增项目'" width="850px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑项目合同' : '新增项目合同'" width="850px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="110px">
         <el-row :gutter="16">
           <el-col :span="12">
@@ -99,10 +102,10 @@
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="营业收入(含税)"><el-input :model-value="formatMoney(form.revenueWithTax)" disabled style="width:100%" /></el-form-item>
+            <el-form-item label="结算收入"><el-input :model-value="formatMoney(form.revenueWithTax)" disabled style="width:100%" /></el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="营业收入(除税)"><el-input :model-value="formatMoney(form.revenueWithoutTax)" disabled style="width:100%" /></el-form-item>
+            <el-form-item label="开票总额"><el-input :model-value="formatMoney(form.revenueWithoutTax)" disabled style="width:100%" /></el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
@@ -129,7 +132,7 @@
             <el-form-item label="开始日期"><el-date-picker v-model="form.startDate" type="date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="预计结束"><el-date-picker v-model="form.endDate" type="date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item>
+            <el-form-item label="竣工验收日"><el-date-picker v-model="form.endDate" type="date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item>
           </el-col>
         </el-row>
         <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>

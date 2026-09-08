@@ -14,15 +14,15 @@
       >
         <el-menu-item index="/projects">
           <el-icon><House /></el-icon>
-          <span>项目管理</span>
-        </el-menu-item>
-        <el-menu-item index="/project-costs">
-          <el-icon><Money /></el-icon>
-          <span>项目成本详情</span>
+          <span>项目合同管理</span>
         </el-menu-item>
         <el-menu-item index="/project-budgets">
           <el-icon><TrendCharts /></el-icon>
           <span>项目预算</span>
+        </el-menu-item>
+        <el-menu-item index="/project-costs">
+          <el-icon><Money /></el-icon>
+          <span>项目成本详情</span>
         </el-menu-item>
         <el-menu-item index="/project-payments">
           <el-icon><DataAnalysis /></el-icon>

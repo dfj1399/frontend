@@ -30,20 +30,14 @@
         <el-table-column prop="contractAmount" label="合同金额" width="120" align="right">
           <template #default="{ row }">{{ fmt(row.contractAmount) }}</template>
         </el-table-column>
-        <el-table-column prop="revenueWithTax" label="营业收入(含税)" width="130" align="right">
-          <template #default="{ row }">{{ fmt(row.revenueWithTax) }}</template>
-        </el-table-column>
-        <el-table-column prop="revenueWithoutTax" label="营业收入(除税)" width="130" align="right">
-          <template #default="{ row }">{{ fmt(row.revenueWithoutTax) }}</template>
-        </el-table-column>
-        <el-table-column prop="totalPayment" label="累计回款" width="120" align="right">
-          <template #default="{ row }">{{ fmt(row.totalPayment) }}</template>
-        </el-table-column>
         <el-table-column prop="totalSettlement" label="累计结算" width="120" align="right">
           <template #default="{ row }">{{ fmt(row.totalSettlement) }}</template>
         </el-table-column>
         <el-table-column prop="totalInvoice" label="累计开票" width="120" align="right">
           <template #default="{ row }">{{ fmt(row.totalInvoice) }}</template>
+        </el-table-column>
+        <el-table-column prop="totalPayment" label="累计回款" width="120" align="right">
+          <template #default="{ row }">{{ fmt(row.totalPayment) }}</template>
         </el-table-column>
         <el-table-column label="操作" width="270" fixed="right">
           <template #default="{ row }">
@@ -463,7 +457,7 @@ const loadGroupedData = async () => {
 const getSummary = ({ columns, data }) => {
   const sums = []; columns.forEach((c, i) => {
     if (i === 0) { sums[i] = '合计'; return }
-    if (['contractAmount', 'revenueWithTax', 'revenueWithoutTax', 'totalPayment', 'totalSettlement', 'totalInvoice'].includes(c.property)) {
+    if (['contractAmount', 'totalSettlement', 'totalInvoice', 'totalPayment'].includes(c.property)) {
       sums[i] = data.reduce((a, r) => a + Number(r[c.property] || 0), 0).toLocaleString('zh-CN', { minimumFractionDigits: 2 })
     } else sums[i] = ''
   }); return sums

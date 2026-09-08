@@ -8,7 +8,7 @@
             <el-select v-model="query.projectId" placeholder="选择项目" clearable style="width:240px;margin-right:8px">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
-            <el-input :model-value="query.year" @input="(v) => query.year = allowNumber(v)" placeholder="年" style="width:110px;margin-right:8px" />
+            <el-date-picker v-model="query.year" type="year" format="YYYY" value-format="YYYY" placeholder="选择年份" clearable style="width:130px;margin-right:8px" />
             <el-button type="primary" @click="loadData" :loading="loading">查询</el-button>
           </div>
         </div>

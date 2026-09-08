@@ -247,7 +247,7 @@ const handleDelete = (row) => {
 const getSummary = ({ columns, data }) => {
   const sums = []; columns.forEach((c, i) => {
     if (i === 0) { sums[i] = '合计'; return }
-    if (['directMaterialCost', 'directLaborCost', 'directMachineryCost', 'directExpense', 'indirectManagementFee', 'otherCost', 'costSubtotal', 'operatingProfit', 'inputTax'].includes(c.property)) {
+    if (['contractAmount', 'projectRevenueWithTax', 'projectRevenueWithoutTax', 'directMaterialCost', 'directLaborCost', 'directMachineryCost', 'directExpense', 'indirectManagementFee', 'otherCost', 'costSubtotal', 'operatingProfit', 'inputTax'].includes(c.property)) {
       const v = data.reduce((a, r) => a + Number(r[c.property] || 0), 0)
       sums[i] = v.toLocaleString('zh-CN', { minimumFractionDigits: 2 })
     } else sums[i] = ''
