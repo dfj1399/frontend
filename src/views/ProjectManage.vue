@@ -11,7 +11,7 @@
             <el-select v-model="selectedProjectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px" @change="loadData">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
-            <el-button type="success" @click="importDialogVisible = true; selectedFile = null" v-if="hasPerm('project:import')">导入Excel</el-button>
+            <el-button type="success" @click="openImportDialog" v-if="hasPerm('project:import')">导入Excel</el-button>
           <el-button type="primary" @click="handleAdd" v-if="hasPerm('project:create')">新增项目</el-button></div>
         </div>
       </template>
@@ -20,8 +20,8 @@
         <el-table-column prop="projectName" label="项目名称" min-width="150" />
         <el-table-column prop="clientName" label="客户名称" width="120" />
         <el-table-column prop="contractNo" label="合同编号" width="120" />
-        <el-table-column prop="startDate" label="合同签订日期" width="120">
-          <template #default="{ row }">{{ row.startDate || '-' }}</template>
+        <el-table-column prop="signingDate" label="合同签订日期" width="120">
+          <template #default="{ row }">{{ row.signingDate || row.startDate || '-' }}</template>
         </el-table-column>
         <el-table-column prop="contractAmount" label="合同金额" width="120" align="right">
           <template #default="{ row }">{{ formatMoney(row.contractAmount) }}</template>
@@ -31,9 +31,6 @@
         </el-table-column>
         <el-table-column prop="revenueWithoutTax" label="开票总额" width="130" align="right">
           <template #default="{ row }">{{ formatMoney(row.revenueWithoutTax) }}</template>
-        </el-table-column>
-        <el-table-column prop="estimatedCost" label="预计成本" width="120" align="right">
-          <template #default="{ row }">{{ formatMoney(row.estimatedCost) }}</template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
@@ -82,7 +79,7 @@
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="预计成本"><el-input :model-value="form.estimatedCost" @input="(v) => form.estimatedCost = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item>
+            <el-form-item label="预计成本"><el-input :model-value="formatMoney(form.estimatedCost)" disabled style="width:100%" /></el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="手续费费率">
@@ -435,13 +432,27 @@ const importLoading = ref(false)
 const uploadRef = ref(null)
 const selectedFile = ref(null)
 const handleFileChange = (file) => { selectedFile.value = file.raw }
+const openImportDialog = () => {
+  selectedFile.value = null
+  importDialogVisible.value = true
+  // 清除上次上传的文件
+  setTimeout(() => {
+    if (uploadRef.value) {
+      uploadRef.value.clearFiles()
+    }
+  }, 100)
+}
 const handleImport = async () => {
   if (!selectedFile.value) { ElMessage.warning('请先选择文件'); return }
   importLoading.value = true
   try {
     const { data } = await importProjects(selectedFile.value)
     if (data.code === 200) {
-      ElMessage.success(data.message + '，共导入 ' + data.data + ' 条')
+      const imported = data.data?.inserted || 0
+      const skipped = data.data?.skipped || 0
+      let msg = data.message + '，新增 ' + imported + ' 条'
+      if (skipped > 0) msg += '，跳过重复数据 ' + skipped + ' 条'
+      ElMessage.success(msg)
       importDialogVisible.value = false
       loadData()
     } else {

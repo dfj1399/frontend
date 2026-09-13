@@ -27,7 +27,6 @@
         <el-table-column prop="recordDate" label="记录日期" width="110" />
         <el-table-column prop="revenueWithTax" label="结算收入" width="120" align="right"><template #default="{ row }">{{ fmt(row.revenueWithTax) }}</template></el-table-column>
         <el-table-column prop="revenueWithoutTax" label="结算收入（除税）" width="120" align="right"><template #default="{ row }">{{ fmt(row.revenueWithoutTax) }}</template></el-table-column>
-        <el-table-column prop="settlementAmount" label="结算金额" width="120" align="right"><template #default="{ row }">{{ fmt(row.settlementAmount) }}</template></el-table-column>
         <el-table-column prop="directMaterialCost" label="直接材料" width="110" align="right"><template #default="{ row }">{{ fmt(row.directMaterialCost) }}</template></el-table-column>
         <el-table-column prop="directLaborCost" label="直接劳务" width="110" align="right"><template #default="{ row }">{{ fmt(row.directLaborCost) }}</template></el-table-column>
         <el-table-column prop="directMachineryCost" label="直接机械" width="110" align="right"><template #default="{ row }">{{ fmt(row.directMachineryCost) }}</template></el-table-column>
@@ -76,7 +75,6 @@
         </el-row>
         <el-row :gutter="16">
           <el-col :span="8"><el-form-item label="结算收入（除税）"><el-input :model-value="fmt(form.revenueWithoutTax)" disabled style="width:100%" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="结算金额"><el-input :model-value="fmt(form.settlementAmount)" disabled style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="直接材料"><el-input :model-value="form.directMaterialCost" @input="(v) => form.directMaterialCost = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="直接劳务"><el-input :model-value="form.directLaborCost" @input="(v) => form.directLaborCost = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
         </el-row>
@@ -162,7 +160,7 @@ const onClientChange = () => {
   loadData()
 }
 
-const form = reactive({ id: null, projectId: null, recordDate: '', recordYear: null, recordMonth: null, revenueWithTax: 0, revenueWithoutTax: 0, settlementAmount: 0, directMaterialCost: 0, directLaborCost: 0, directMachineryCost: 0, directExpense: 0, indirectManagementFee: 0, otherCost: 0, costSubtotal: 0, operatingProfit: 0, inputTax: 0, periodManagementFee: 0, periodFinancialFee: 0, projectCostAmount: 0, loanAmount: 0, fundsOccupation: 0, grossMarginRate: 0, remark: '', createdBy: '', updatedBy: '' })
+const form = reactive({ id: null, projectId: null, recordDate: '', recordYear: null, recordMonth: null, revenueWithTax: 0, revenueWithoutTax: 0, directMaterialCost: 0, directLaborCost: 0, directMachineryCost: 0, directExpense: 0, indirectManagementFee: 0, otherCost: 0, costSubtotal: 0, operatingProfit: 0, inputTax: 0, periodManagementFee: 0, periodFinancialFee: 0, projectCostAmount: 0, loanAmount: 0, fundsOccupation: 0, grossMarginRate: 0, remark: '', createdBy: '', updatedBy: '' })
 const rules = { projectId: [{ required: true, message: '请选择项目', trigger: 'change' }], recordDate: [{ required: true, message: '请选择日期', trigger: 'change' }] }
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
@@ -180,18 +178,15 @@ const onProjectChange = (projectId) => {
   if (!projectId) {
     form.revenueWithTax = 0
     form.revenueWithoutTax = 0
-    form.settlementAmount = 0
     return
   }
   const project = allProjects.value.find(p => p.id === projectId)
   if (project) {
     form.revenueWithTax = Number(project.revenueWithTax || 0)
     form.revenueWithoutTax = Number(project.revenueWithoutTax || 0)
-    form.settlementAmount = Number(project.settlementAmount || 0)
   } else {
     form.revenueWithTax = 0
     form.revenueWithoutTax = 0
-    form.settlementAmount = 0
   }
 }
 
@@ -233,7 +228,7 @@ const loadData = async () => {
   finally { loading.value = false }
 }
 
-const resetForm = () => { Object.assign(form, { id: null, projectId: null, recordDate: '', recordYear: null, recordMonth: null, revenueWithTax: 0, revenueWithoutTax: 0, settlementAmount: 0, directMaterialCost: 0, directLaborCost: 0, directMachineryCost: 0, directExpense: 0, indirectManagementFee: 0, otherCost: 0, costSubtotal: 0, operatingProfit: 0, inputTax: 0, periodManagementFee: 0, periodFinancialFee: 0, projectCostAmount: 0, loanAmount: 0, fundsOccupation: 0, grossMarginRate: 0, remark: '', createdBy: '', updatedBy: '' }) }
+const resetForm = () => { Object.assign(form, { id: null, projectId: null, recordDate: '', recordYear: null, recordMonth: null, revenueWithTax: 0, revenueWithoutTax: 0, directMaterialCost: 0, directLaborCost: 0, directMachineryCost: 0, directExpense: 0, indirectManagementFee: 0, otherCost: 0, costSubtotal: 0, operatingProfit: 0, inputTax: 0, periodManagementFee: 0, periodFinancialFee: 0, projectCostAmount: 0, loanAmount: 0, fundsOccupation: 0, grossMarginRate: 0, remark: '', createdBy: '', updatedBy: '' }) }
 
 const handleAdd = () => { resetForm(); isEdit.value = false; dialogVisible.value = true }
 const handleEdit = (row) => { resetForm(); isEdit.value = true; Object.keys(form).forEach(k => { if (row[k] !== undefined) form[k] = row[k] }); dialogVisible.value = true }
@@ -259,7 +254,7 @@ const handleDelete = (row) => {
 const getSummary = ({ columns, data }) => {
   const sums = []; columns.forEach((c, i) => {
     if (i === 0) { sums[i] = '合计'; return }
-    if (['contractAmount', 'revenueWithTax', 'revenueWithoutTax', 'settlementAmount', 'directMaterialCost', 'directLaborCost', 'directMachineryCost', 'directExpense', 'indirectManagementFee', 'otherCost', 'costSubtotal', 'operatingProfit', 'inputTax', 'periodManagementFee', 'periodFinancialFee', 'projectCostAmount', 'loanAmount', 'fundsOccupation'].includes(c.property)) {
+    if (['contractAmount', 'revenueWithTax', 'revenueWithoutTax', 'directMaterialCost', 'directLaborCost', 'directMachineryCost', 'directExpense', 'indirectManagementFee', 'otherCost', 'costSubtotal', 'operatingProfit', 'inputTax', 'periodManagementFee', 'periodFinancialFee', 'projectCostAmount', 'loanAmount', 'fundsOccupation'].includes(c.property)) {
       const v = data.reduce((a, r) => a + Number(r[c.property] || 0), 0)
       sums[i] = v.toLocaleString('zh-CN', { minimumFractionDigits: 2 })
     } else sums[i] = ''

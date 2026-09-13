@@ -14,7 +14,9 @@
             <el-select v-model="query.owner" placeholder="选择负责人" clearable style="width:140px;margin-right:8px" @change="onOwnerChange">
               <el-option v-for="o in owners" :key="o.ownerName" :label="o.ownerName" :value="o.ownerName" />
             </el-select>
-
+            <el-select v-model="query.year" placeholder="选择年份" clearable style="width:120px;margin-right:8px">
+              <el-option v-for="y in years" :key="y" :label="y + '年'" :value="y" />
+            </el-select>
             <el-button type="primary" @click="loadData" :loading="loading">查询</el-button>
             <el-button @click="handleExport" :loading="exporting">导出</el-button>
           </div>
@@ -62,7 +64,8 @@ const projects = computed(() => {
   if (query.owner) list = list.filter(p => p.owner === query.owner)
   return list
 })
-const query = reactive({ projectId: null, clientName: null, owner: null })
+const query = reactive({ year: new Date().getFullYear(), projectId: null, clientName: null, owner: null })
+const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i)
 const tableData = ref([])
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'

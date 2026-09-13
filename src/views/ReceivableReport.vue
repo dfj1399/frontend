@@ -38,7 +38,11 @@
         <el-table-column prop="invoicedNotReceived" label="已票未收款" width="120" align="right"><template #default="{ row }">{{ fmt(row.invoicedNotReceived) }}</template></el-table-column>
         <el-table-column prop="subtotal" label="小计" width="120" align="right"><template #default="{ row }">{{ fmt(row.subtotal) }}</template></el-table-column>
         <el-table-column prop="deposit" label="质保金" width="110" align="right"><template #default="{ row }">{{ fmt(row.deposit) }}</template></el-table-column>
-        <el-table-column prop="depositPeriod" label="期限" width="120" />
+        <el-table-column prop="depositPeriod" label="期限" width="120">
+          <template #default="{ row }">
+            <span :style="isUrgent(row.depositPeriod) ? 'color:red;font-weight:bold' : ''">{{ row.depositPeriod }}</span>
+          </template>
+        </el-table-column>
       </el-table>
     </el-card>
   </div>
@@ -65,6 +69,12 @@ const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 
 const tableData = ref([])
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
+
+const isUrgent = (period) => {
+  if (!period) return false
+  const days = parseInt(period)
+  return !isNaN(days) && days <= 60
+}
 
 const allowNumber = (v) => {
   let s = String(v).replace(/[^\d.]/g, '')
