@@ -17,7 +17,7 @@
       </template>
       <el-table :data="filteredList" v-loading="loading" stripe>
         <el-table-column prop="projectCode" label="项目编号" width="120" />
-        <el-table-column prop="projectName" label="项目名称" min-width="150" />
+        <el-table-column prop="projectName" label="项目名称" width="200" />
         <el-table-column prop="clientName" label="客户名称" width="120" />
         <el-table-column prop="contractNo" label="合同编号" width="120" />
         <el-table-column prop="signingDate" label="合同签订日期" width="120">
