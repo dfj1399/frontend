@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <el-card>
       <template #header>
@@ -402,7 +402,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getProjects, getClients, importProjectPayments, exportProjectPayments, getPaymentGroupedList, getPaymentOperationsByProject, addPaymentOperation, deletePaymentOperation, getPaymentSettlements, getSettlementTaxDetails, getInvoiceableTaxDetails, getProjectRevenueTax, getActiveVatItems, uploadSettlementDocs, getSettlementDocs, deleteSettlementDoc, permissionStore, loadPermissionsFromCache, getTemplateUrl } from '../api'
 import { Upload, Download, Plus } from '@element-plus/icons-vue'
@@ -431,10 +431,26 @@ const activeVatItems = ref([])
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
 const allowNumber = (v) => {
-  let s = String(v).replace(/[^\d.]/g, '')
+  let s = String(v).replace(/[^\d.\-]/g, '')
+  // detect negative intent BEFORE stripping minus (handles "0-" from field showing 0)
+  const isNeg = s.startsWith('-') || s === '0-' || s === '-0'
+  if (s.startsWith('-')) {
+    s = '-' + s.substring(1).replace(/-/g, '')
+  } else {
+    s = s.replace(/-/g, '')
+  }
+  // auto-clear leading 0: field shows "0", user types digit -> replace
+  if (s.startsWith('0') && s.length > 1 && s[1] !== '.') {
+    s = s.substring(1)
+  }
+  if (isNeg) {
+    if (s === '-' || s === '0' || s === '') return '-'
+    if (!s.startsWith('-')) s = '-' + s
+  }
   const dotIdx = s.indexOf('.')
   if (dotIdx !== -1) s = s.substring(0, dotIdx + 1) + s.substring(dotIdx + 1).replace(/\./g, '')
-  return s === '' ? 0 : s
+  if (s === '' || s === '-' || s === '.') return 0
+  return s
 }
 
 const operationTypeLabelMap = { PAYMENT: '回款', SETTLEMENT: '结算', INVOICE: '开票' }
@@ -498,7 +514,7 @@ const paymentValidationWarning = computed(() => {
   const row = currentProjectRow.value
   if (!row) return ''
   const amount = Number(paymentForm.amount || 0)
-  if (amount <= 0) return ''
+  if (amount === 0) return ''
   const newTotal = Number(row.totalPayment || 0) + amount
   if (newTotal > Number(row.totalSettlement || 0)) {
     return '注意：累计回款(' + fmt(newTotal) + ')将超过累计结算(' + fmt(row.totalSettlement) + ')'
@@ -521,6 +537,8 @@ const openPaymentDialog = async (row) => {
   } catch { /* ignore */ }
   loadPaymentHistory(row.projectId)
   paymentDialogVisible.value = true
+  await nextTick()
+  paymentFormRef.value?.clearValidate()
 }
 
 const onSettlementChange = async (settlementId) => {
@@ -618,7 +636,7 @@ const settlementValidationWarning = computed(() => {
   const row = currentProjectRow.value
   if (!row) return ''
   const total = settlementTotalAmount.value
-  if (total <= 0) return ''
+  if (total === 0) return ''
   const newTotal = Number(row.totalSettlement || 0) + total
   const contract = Number(row.contractAmount || 0)
   if (contract > 0 && newTotal > contract) {
@@ -671,7 +689,7 @@ const openSettlementDialog = async (row) => {
 const submitSettlement = async () => {
   // 过滤掉结算金额和发票金额均为0的行
   const nonZeroDetails = settlementForm.taxDetails.filter(d =>
-    Number(d.settlementAmount || 0) > 0 || Number(d.invoiceAmount || 0) > 0
+    Number(d.settlementAmount || 0) !== 0 || Number(d.invoiceAmount || 0) !== 0
   )
   if (nonZeroDetails.length === 0) { ElMessage.warning('请至少填写一条税率明细的结算金额或发票金额'); return }
   if (!settlementForm.operationDate) { ElMessage.warning('请选择日期'); return }

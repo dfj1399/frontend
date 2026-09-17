@@ -180,12 +180,26 @@ const activeTab = ref('expense')
 const catLabel = (c) => ({ MATERIAL: '材料', LABOR: '劳务', MACHINERY: '机械', TRAVEL: '差旅', SUBCONTRACT: '分包', MANAGEMENT: '管理', OTHER: '其他' }[c] || c || '-')
 
 const allowNumber = (v) => {
-  let s = String(v).replace(/[^\d.]/g, '')
-  const dotIdx = s.indexOf('.')
-  if (dotIdx !== -1) {
-    s = s.substring(0, dotIdx + 1) + s.substring(dotIdx + 1).replace(/\./g, '')
+  let s = String(v).replace(/[^\d.\-]/g, '')
+  // detect negative intent BEFORE stripping minus (handles "0-" from field showing 0)
+  const isNeg = s.startsWith('-') || s === '0-' || s === '-0'
+  if (s.startsWith('-')) {
+    s = '-' + s.substring(1).replace(/-/g, '')
+  } else {
+    s = s.replace(/-/g, '')
   }
-  return s === '' ? 0 : s
+  // auto-clear leading 0: field shows "0", user types digit -> replace
+  if (s.startsWith('0') && s.length > 1 && s[1] !== '.') {
+    s = s.substring(1)
+  }
+  if (isNeg) {
+    if (s === '-' || s === '0' || s === '') return '-'
+    if (!s.startsWith('-')) s = '-' + s
+  }
+  const dotIdx = s.indexOf('.')
+  if (dotIdx !== -1) s = s.substring(0, dotIdx + 1) + s.substring(dotIdx + 1).replace(/\./g, '')
+  if (s === '' || s === '-' || s === '.') return 0
+  return s
 }
 
 // === 支出项目 ===

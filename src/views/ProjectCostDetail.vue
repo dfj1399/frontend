@@ -166,12 +166,26 @@ const rules = { projectId: [{ required: true, message: '请选择项目', trigge
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
 
 const allowNumber = (v) => {
-  let s = String(v).replace(/[^\d.]/g, '')
-  const dotIdx = s.indexOf('.')
-  if (dotIdx !== -1) {
-    s = s.substring(0, dotIdx + 1) + s.substring(dotIdx + 1).replace(/\./g, '')
+  let s = String(v).replace(/[^\d.\-]/g, '')
+  // detect negative intent BEFORE stripping minus (handles "0-" from field showing 0)
+  const isNeg = s.startsWith('-') || s === '0-' || s === '-0'
+  if (s.startsWith('-')) {
+    s = '-' + s.substring(1).replace(/-/g, '')
+  } else {
+    s = s.replace(/-/g, '')
   }
-  return s === '' ? 0 : s
+  // auto-clear leading 0: field shows "0", user types digit -> replace
+  if (s.startsWith('0') && s.length > 1 && s[1] !== '.') {
+    s = s.substring(1)
+  }
+  if (isNeg) {
+    if (s === '-' || s === '0' || s === '') return '-'
+    if (!s.startsWith('-')) s = '-' + s
+  }
+  const dotIdx = s.indexOf('.')
+  if (dotIdx !== -1) s = s.substring(0, dotIdx + 1) + s.substring(dotIdx + 1).replace(/\./g, '')
+  if (s === '' || s === '-' || s === '.') return 0
+  return s
 }
 
 const onProjectChange = (projectId) => {
