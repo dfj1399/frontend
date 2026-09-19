@@ -38,10 +38,19 @@ export const setUserPermissions = (perms) => {
 }
 
 // 从缓存恢复权限
-export const loadPermissionsFromCache = () => {
-  const cached = sessionStorage.getItem('permissions')
-  if (cached) {
-    try { permissionStore.set(JSON.parse(cached)) } catch {}
+export const loadPermissionsFromCache = async () => {
+  // always refresh from server to pick up newly assigned permissions
+  try {
+    const { data } = await api.get('/permissions/my')
+    const perms = data.data || data || []
+    permissionStore.set(perms)
+    sessionStorage.setItem('permissions', JSON.stringify(perms))
+  } catch {
+    // fallback to cache if server unreachable
+    const cached = sessionStorage.getItem('permissions')
+    if (cached) {
+      try { permissionStore.set(JSON.parse(cached)) } catch {}
+    }
   }
 }
 
@@ -66,6 +75,10 @@ export const importProjects = (file, operator = 'admin') => {
   return api.post('/projects/import', fd, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 60000 })
 }
 
+export const exportProjects = () => {
+  return api.get('/projects/export', { responseType: 'blob', timeout: 60000 })
+}
+
 // ==================== 客户管理 ====================
 export const getClients = (keyword) => api.get('/clients', { params: keyword ? { keyword } : {} })
 export const getClientById = (id) => api.get(`/clients/${id}`)
@@ -86,7 +99,7 @@ export const addProjectOwner = (data) => api.post('/project-owners', data)
 export const updateProjectOwner = (data) => api.put('/project-owners', data)
 export const deleteProjectOwner = (id) => api.delete(`/project-owners/${id}`)
 
-// ==================== 项目成本详情 ====================
+// ==================== 项目成本管理 ====================
 export const getProjectCosts = (params) => api.get('/project-costs', { params })
 export const getProjectCostById = (id) => api.get(`/project-costs/${id}`)
 export const getProjectCostsByProject = (projectId) => api.get(`/project-costs/project/${projectId}`)

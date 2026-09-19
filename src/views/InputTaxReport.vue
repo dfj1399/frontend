@@ -25,8 +25,8 @@
 
       <el-table :data="tableData" v-loading="loading" stripe show-summary :summary-method="getSummary" size="small">
         <el-table-column prop="projectCode" label="项目编号" width="110" />
-        <el-table-column prop="projectName" label="项目名称" min-width="150" />
-        <el-table-column prop="clientName" label="客户名称" width="110" />
+        <el-table-column prop="projectName" label="项目名称" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="clientName" label="客户名称" width="110" show-overflow-tooltip />
         <el-table-column prop="lastYearTax" label="上年度" width="110" align="right"><template #default="{ row }">{{ fmt(row.lastYearTax) }}</template></el-table-column>
         <el-table-column v-for="m in 12" :key="'it'+m" :prop="'m'+m+'Tax'" :label="m+'月'" width="100" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'Tax']) }}</template></el-table-column>
         <el-table-column prop="yearTax" label="本年累计" width="120" align="right"><template #default="{ row }">{{ fmt(row.yearTax) }}</template></el-table-column>

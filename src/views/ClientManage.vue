@@ -11,7 +11,7 @@
         </div>
       </template>
       <el-table :data="list" v-loading="loading" stripe>
-        <el-table-column prop="clientName" label="客户名称" min-width="160" />
+        <el-table-column prop="clientName" label="客户名称" min-width="160" show-overflow-tooltip />
         <el-table-column prop="contactPerson" label="联系人" width="100" />
         <el-table-column prop="contactPhone" label="联系电话" width="130" />
         <el-table-column prop="contactEmail" label="联系邮箱" width="160" />
@@ -71,7 +71,7 @@
     <!-- 导入对话框 -->
     <el-dialog v-model="importDialogVisible" title="导入客户" width="480px">
       <div style="margin-bottom: 12px">
-        <el-link type="primary" :href="templateUrl" :underline="false" target="_blank">下载导入模板</el-link>
+        <a :href="templateUrl" target="_blank" class="template-download-link">下载导入模板</a>
       </div>
       <el-upload
         ref="uploadRef"
@@ -259,4 +259,13 @@ onMounted(() => { loadData() })
 <style scoped>
 .card-header { display: flex; justify-content: space-between; align-items: center; }
 .duplicate-warn { color: #e6a23c; font-size: 12px; line-height: 1.4; margin-top: 2px; }
+
+.template-download-link {
+  color: var(--el-color-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+.template-download-link:hover {
+  color: var(--el-color-primary-light-3);
+}
 </style>

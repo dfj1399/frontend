@@ -20,8 +20,8 @@
         <el-tab-pane label="应收债权" name="receivable">
           <el-table :data="receivableData" v-loading="loading" stripe show-summary :summary-method="getReceivableSummary" size="small">
             <el-table-column prop="projectCode" label="项目编号" width="110" />
-            <el-table-column prop="projectName" label="项目名称" min-width="140" />
-            <el-table-column prop="clientName" label="客户名称" width="110" />
+            <el-table-column prop="projectName" label="项目名称" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="clientName" label="客户名称" width="110" show-overflow-tooltip />
             <el-table-column prop="contractAmount" label="合同金额" width="120" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
             <el-table-column prop="settlementAmount" label="结算金额" width="120" align="right"><template #default="{ row }">{{ fmt(row.settlementAmount) }}</template></el-table-column>
             <el-table-column prop="invoicedAmount" label="已开发票" width="120" align="right"><template #default="{ row }">{{ fmt(row.invoicedAmount) }}</template></el-table-column>
@@ -37,8 +37,8 @@
         <el-tab-pane label="增值税发票管理台账" name="paymentMonth">
           <el-table :data="paymentMonthData" v-loading="loading" stripe size="small">
             <el-table-column prop="projectCode" label="项目编号" width="100" />
-            <el-table-column prop="projectName" label="项目名称" width="130" />
-            <el-table-column prop="clientName" label="客户" width="100" />
+            <el-table-column prop="projectName" label="项目名称" width="130" show-overflow-tooltip />
+            <el-table-column prop="clientName" label="客户" width="100" show-overflow-tooltip />
             <el-table-column prop="contractAmount" label="合同金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
             <el-table-column label="项目累计" align="center">
               <el-table-column prop="totalSettlementAmount" label="结算" width="100" align="right"><template #default="{ row }">{{ fmt(row.totalSettlementAmount) }}</template></el-table-column>
@@ -61,7 +61,7 @@
         <el-tab-pane label="进项税额统计" name="inputTax">
           <el-table :data="inputTaxData" v-loading="loading" stripe show-summary :summary-method="getInputTaxSummary" size="small">
             <el-table-column prop="projectCode" label="项目编号" width="110" />
-            <el-table-column prop="projectName" label="项目名称" min-width="150" />
+            <el-table-column prop="projectName" label="项目名称" min-width="150" show-overflow-tooltip />
             <el-table-column prop="lastYearTax" label="上年度" width="110" align="right"><template #default="{ row }">{{ fmt(row.lastYearTax) }}</template></el-table-column>
             <el-table-column v-for="m in 12" :key="'it'+m" :prop="'m'+m+'Tax'" :label="m+'月'" width="100" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'Tax']) }}</template></el-table-column>
             <el-table-column prop="yearTax" label="本年累计" width="120" align="right"><template #default="{ row }">{{ fmt(row.yearTax) }}</template></el-table-column>
@@ -71,7 +71,7 @@
         <el-tab-pane label="收付实现制台账" name="cashFlow">
           <el-table :data="cashFlowData" v-loading="loading" stripe show-summary :summary-method="getCashFlowSummary" size="small">
             <el-table-column prop="projectCode" label="项目编号" width="100" />
-            <el-table-column prop="projectName" label="项目名称" width="130" />
+            <el-table-column prop="projectName" label="项目名称" width="130" show-overflow-tooltip />
             <el-table-column prop="contractAmount" label="合同金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
             <el-table-column prop="receivableBalance" label="应收账款余额" width="120" align="right"><template #default="{ row }">{{ fmt(row.receivableBalance) }}</template></el-table-column>
             <el-table-column prop="invoicedAmount" label="已票金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.invoicedAmount) }}</template></el-table-column>
@@ -92,7 +92,7 @@
         <el-tab-pane label="项目损益汇总" name="profit">
           <el-table :data="profitData" v-loading="loading" stripe show-summary :summary-method="getProfitSummary" size="small">
             <el-table-column prop="projectCode" label="项目编号" width="100" />
-            <el-table-column prop="projectName" label="项目名称" width="130" />
+            <el-table-column prop="projectName" label="项目名称" width="130" show-overflow-tooltip />
             <el-table-column prop="contractAmount" label="合同金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
             <el-table-column prop="revenueWithoutTax" label="营业收入(不含税)" width="130" align="right"><template #default="{ row }">{{ fmt(row.revenueWithoutTax) }}</template></el-table-column>
             <el-table-column prop="businessTax" label="营业税及附加" width="120" align="right"><template #default="{ row }">{{ fmt(row.businessTax) }}</template></el-table-column>

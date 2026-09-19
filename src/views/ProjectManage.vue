@@ -12,13 +12,14 @@
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
             <el-button type="success" @click="openImportDialog" v-if="hasPerm('project:import')">导入Excel</el-button>
+        <el-button type="warning" @click="handleExport" v-if="hasPerm('project:export')">导出Excel</el-button>
           <el-button type="primary" @click="handleAdd" v-if="hasPerm('project:create')">新增项目</el-button></div>
         </div>
       </template>
       <el-table :data="filteredList" v-loading="loading" stripe>
         <el-table-column prop="projectCode" label="项目编号" width="120" />
-        <el-table-column prop="projectName" label="项目名称" width="200" />
-        <el-table-column prop="clientName" label="客户名称" width="120" />
+        <el-table-column prop="projectName" label="项目名称" width="200" show-overflow-tooltip />
+        <el-table-column prop="clientName" label="客户名称" width="120" show-overflow-tooltip />
         <el-table-column prop="contractNo" label="合同编号" width="120" />
         <el-table-column prop="signingDate" label="合同签订日期" width="120">
           <template #default="{ row }">{{ row.signingDate || row.startDate || '-' }}</template>
@@ -187,9 +188,9 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <el-link type="primary" :underline="false" :href="getTemplateUrl('project')" target="_blank">
+            <a :href="getTemplateUrl('project')" target="_blank" class="template-download-link">
               <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
-            </el-link>
+            </a>
           </div>
         </template>
       </el-upload>
@@ -204,7 +205,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProjects, addProject, updateProject, deleteProject, importProjects, getProjectRevenueTax, saveProjectRevenueTax, getActiveVatItems, getBudgetSumCostSubtotal, getClients, getProjectOwners, permissionStore, getTemplateUrl } from '../api'
+import { getProjects, addProject, updateProject, deleteProject, importProjects, exportProjects, getProjectRevenueTax, saveProjectRevenueTax, getActiveVatItems, getBudgetSumCostSubtotal, getClients, getProjectOwners, permissionStore, getTemplateUrl } from '../api'
 import { Upload, Download } from '@element-plus/icons-vue'
 
 const loading = ref(false)
@@ -475,6 +476,19 @@ const handleImport = async () => {
   } catch (e) { ElMessage.error('导入失败：' + (e.response?.data?.message || e.message)) }
   finally { importLoading.value = false; selectedFile.value = null }
 }
+
+const handleExport = async () => {
+  try {
+    const res = await exportProjects()
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '项目合同管理.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch { ElMessage.error('导出失败') }
+}
 onMounted(async () => {
   try {
     const [projRes, clientRes, ownerRes] = await Promise.all([getProjects(), getClients(), getProjectOwners()])
@@ -489,4 +503,13 @@ onMounted(async () => {
 
 <style scoped>
 .card-header { display: flex; justify-content: space-between; align-items: center; }
+
+.template-download-link {
+  color: var(--el-color-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+.template-download-link:hover {
+  color: var(--el-color-primary-light-3);
+}
 </style>

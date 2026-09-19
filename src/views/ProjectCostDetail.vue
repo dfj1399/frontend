@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>项目成本详情</span>
+          <span>项目成本管理</span>
           <div>
             <el-select v-model="selectedClientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
@@ -25,8 +25,8 @@
         <el-table-column prop="clientName" label="客户名称" width="110" show-overflow-tooltip />
         <el-table-column prop="contractAmount" label="合同金额" width="120" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
         <el-table-column prop="recordDate" label="记录日期" width="110" />
-        <el-table-column prop="revenueWithTax" label="结算收入" width="120" align="right"><template #default="{ row }">{{ fmt(row.revenueWithTax) }}</template></el-table-column>
-        <el-table-column prop="revenueWithoutTax" label="结算收入（除税）" width="120" align="right"><template #default="{ row }">{{ fmt(row.revenueWithoutTax) }}</template></el-table-column>
+        <el-table-column prop="revenueWithTax" label="营业收入" width="120" align="right"><template #default="{ row }">{{ fmt(row.revenueWithTax) }}</template></el-table-column>
+        <el-table-column prop="revenueWithoutTax" label="营业收入（除税）" width="120" align="right"><template #default="{ row }">{{ fmt(row.revenueWithoutTax) }}</template></el-table-column>
         <el-table-column prop="directMaterialCost" label="直接材料" width="110" align="right"><template #default="{ row }">{{ fmt(row.directMaterialCost) }}</template></el-table-column>
         <el-table-column prop="directLaborCost" label="直接劳务" width="110" align="right"><template #default="{ row }">{{ fmt(row.directLaborCost) }}</template></el-table-column>
         <el-table-column prop="directMachineryCost" label="直接机械" width="110" align="right"><template #default="{ row }">{{ fmt(row.directMachineryCost) }}</template></el-table-column>
@@ -71,10 +71,10 @@
         <el-row :gutter="16">
           <el-col :span="8"><el-form-item label="年"><el-input :model-value="form.recordYear" @input="(v) => form.recordYear = allowNumber(v)" style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="月"><el-input :model-value="form.recordMonth" @input="(v) => form.recordMonth = allowNumber(v)" style="width:100%" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="结算收入"><el-input :model-value="fmt(form.revenueWithTax)" disabled style="width:100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="营业收入"><el-input :model-value="fmt(form.revenueWithTax)" disabled style="width:100%" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="8"><el-form-item label="结算收入（除税）"><el-input :model-value="fmt(form.revenueWithoutTax)" disabled style="width:100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="营业收入（除税）"><el-input :model-value="fmt(form.revenueWithoutTax)" disabled style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="直接材料"><el-input :model-value="form.directMaterialCost" @input="(v) => form.directMaterialCost = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="直接劳务"><el-input :model-value="form.directLaborCost" @input="(v) => form.directLaborCost = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
         </el-row>
@@ -108,7 +108,7 @@
     </el-dialog>
 
     <!-- Excel导入弹窗 -->
-    <el-dialog v-model="importDialogVisible" title="导入项目成本详情Excel" width="450px">
+    <el-dialog v-model="importDialogVisible" title="导入项目成本管理Excel" width="450px">
       <el-upload
         ref="uploadRef"
         drag
@@ -123,9 +123,9 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <el-link type="primary" :underline="false" :href="getTemplateUrl('expense-items')" target="_blank">
+            <a :href="getTemplateUrl('expense-items')" target="_blank" class="template-download-link">
               <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
-            </el-link>
+            </a>
           </div>
         </template>
       </el-upload>
@@ -205,14 +205,21 @@ const onProjectChange = (projectId) => {
 }
 
 watch(
-  () => [form.directMaterialCost, form.directLaborCost, form.directMachineryCost, form.directExpense, form.indirectManagementFee, form.otherCost, form.revenueWithTax, form.revenueWithoutTax, form.periodManagementFee, form.periodFinancialFee],
+  () => [form.directMaterialCost, form.directLaborCost, form.directMachineryCost, form.directExpense, form.indirectManagementFee, form.otherCost, form.revenueWithTax, form.revenueWithoutTax, form.inputTax, form.periodManagementFee, form.periodFinancialFee],
   () => {
     form.costSubtotal = Number(form.directMaterialCost || 0) + Number(form.directLaborCost || 0) + Number(form.directMachineryCost || 0) + Number(form.directExpense || 0) + Number(form.indirectManagementFee || 0) + Number(form.otherCost || 0)
-    form.operatingProfit = Number(form.revenueWithTax || 0) - Number(form.costSubtotal || 0)
-    // 毛利率 = (成本合计 + 期间管理 + 期间财务) / 结算收入（除税）
+    form.operatingProfit = Number(form.revenueWithoutTax || 0) - Number(form.costSubtotal || 0)
+    // 毛利率 = (成本合计 + 期间管理 + 期间财务 + 附税合计) / 营业收入（除税）
     const revWithoutTax = Number(form.revenueWithoutTax || 0)
     if (revWithoutTax > 0) {
-      const numerator = Number(form.costSubtotal || 0) + Number(form.periodManagementFee || 0) + Number(form.periodFinancialFee || 0)
+      // 附税合计：水利基金(0.05%) + 城建税(增值税×12%) + 印花税((除税收入+成本合计)×0.03%)
+      const outputTax = Number(form.revenueWithTax || 0) - revWithoutTax
+      const vat = outputTax - Number(form.inputTax || 0)
+      const waterTax = revWithoutTax * 0.0005
+      const cityTax = vat > 0 ? vat * 0.12 : 0
+      const stampTax = (revWithoutTax + Number(form.costSubtotal || 0)) * 0.0003
+      const surchargeTax = waterTax + cityTax + stampTax
+      const numerator = Number(form.costSubtotal || 0) + Number(form.periodManagementFee || 0) + Number(form.periodFinancialFee || 0) + surchargeTax
       form.grossMarginRate = (numerator / revWithoutTax * 100).toFixed(2)
     } else {
       form.grossMarginRate = 0
@@ -303,7 +310,7 @@ const handleExport = async () => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = '项目成本详情.xlsx'
+    a.download = '项目成本管理.xlsx'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -323,4 +330,13 @@ onMounted(async () => {
 
 <style scoped>
 .card-header { display: flex; justify-content: space-between; align-items: center; }
+
+.template-download-link {
+  color: var(--el-color-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+.template-download-link:hover {
+  color: var(--el-color-primary-light-3);
+}
 </style>

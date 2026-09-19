@@ -20,7 +20,7 @@
 
       <el-table :data="groupedList" v-loading="loading" stripe show-summary :summary-method="getSummary">
         <el-table-column prop="projectCode" label="项目编号" width="110" show-overflow-tooltip />
-        <el-table-column prop="projectName" label="项目名称" min-width="140" show-overflow-tooltip>
+        <el-table-column prop="projectName" label="项目名称" width="140" show-overflow-tooltip>
           <template #default="{ row }">
             <el-link v-if="hasPerm('payment:detail')" type="primary" @click="showHistory(row)">{{ row.projectName }}</el-link>
             <span v-else>{{ row.projectName }}</span>
@@ -387,9 +387,9 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <el-link type="primary" :underline="false" :href="getTemplateUrl('project-payment')" target="_blank">
+            <a :href="getTemplateUrl('project-payment')" target="_blank" class="template-download-link">
               <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
-            </el-link>
+            </a>
           </div>
         </template>
       </el-upload>
@@ -777,9 +777,8 @@ const openRowInvoiceInput = (row) => {
 
 const submitRowInvoice = async () => {
   const amt = Number(newInvoiceAmount.value || 0)
-  if (amt <= 0) { ElMessage.warning('请输入开票金额'); return }
-  const remain = Number(currentInvoiceRow.invoiceAmount || 0) - Number(currentInvoiceRow.issuedInvoiceAmount || 0)
-  if (amt > remain) { ElMessage.warning('开票金额不能超过可开票余额 ' + remain.toFixed(2)); return }
+  if (amt === 0) { ElMessage.warning('请输入开票金额'); return }
+  // negative invoice amounts are allowed (to reduce total issued)
   invoiceLoading.value = true
   try {
     await addPaymentOperation({
@@ -889,4 +888,13 @@ onMounted(async () => {
 
 <style scoped>
 .card-header { display: flex; justify-content: space-between; align-items: center; }
+
+.template-download-link {
+  color: var(--el-color-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+.template-download-link:hover {
+  color: var(--el-color-primary-light-3);
+}
 </style>

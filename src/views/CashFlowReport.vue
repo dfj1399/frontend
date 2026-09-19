@@ -29,8 +29,8 @@
 
       <el-table :data="tableData" v-loading="loading" stripe show-summary :summary-method="getSummary" size="small">
         <el-table-column prop="projectCode" label="项目编号" width="100" />
-        <el-table-column prop="projectName" label="项目名称" width="130" />
-        <el-table-column prop="clientName" label="客户名称" width="110" />
+        <el-table-column prop="projectName" label="项目名称" width="130" show-overflow-tooltip />
+        <el-table-column prop="clientName" label="客户名称" width="110" show-overflow-tooltip />
         <el-table-column prop="contractAmount" label="合同金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
         <el-table-column prop="receivableBalance" label="应收账款余额" width="120" align="right"><template #default="{ row }">{{ fmt(row.receivableBalance) }}</template></el-table-column>
         <el-table-column prop="invoicedAmount" label="已票金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.invoicedAmount) }}</template></el-table-column>

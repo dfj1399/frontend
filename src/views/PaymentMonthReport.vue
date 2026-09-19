@@ -25,8 +25,8 @@
 
       <el-table :data="tableData" v-loading="loading" stripe size="small">
         <el-table-column prop="projectCode" label="项目编号" width="100" />
-        <el-table-column prop="projectName" label="项目名称" width="130" />
-        <el-table-column prop="clientName" label="客户" width="100" />
+        <el-table-column prop="projectName" label="项目名称" width="130" show-overflow-tooltip />
+        <el-table-column prop="clientName" label="客户" width="100" show-overflow-tooltip />
         <el-table-column prop="contractAmount" label="合同金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
         <el-table-column label="项目累计" align="center">
           <el-table-column prop="totalSettlementAmount" label="结算" width="100" align="right"><template #default="{ row }">{{ fmt(row.totalSettlementAmount) }}</template></el-table-column>

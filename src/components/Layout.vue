@@ -18,11 +18,11 @@
         </el-menu-item>
         <el-menu-item index="/project-budgets">
           <el-icon><TrendCharts /></el-icon>
-          <span>项目预算</span>
+          <span>项目预算管理</span>
         </el-menu-item>
         <el-menu-item index="/project-costs">
           <el-icon><Money /></el-icon>
-          <span>项目成本详情</span>
+          <span>项目成本管理</span>
         </el-menu-item>
         <el-menu-item index="/project-payments">
           <el-icon><DataAnalysis /></el-icon>
@@ -51,7 +51,7 @@
           </el-menu-item>
           <el-menu-item index="/reports/profit">
             <el-icon><PieChart /></el-icon>
-            <span>项目损益汇总</span>
+            <span>项目损益汇总表</span>
           </el-menu-item>
           <el-menu-item index="/reports/project-ledger">
             <el-icon><DocumentCopy /></el-icon>

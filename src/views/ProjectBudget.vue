@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>项目预算</span>
+          <span>项目预算管理</span>
           <div>
             <el-select v-model="selectedClientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
@@ -97,7 +97,7 @@
     </el-dialog>
 
     <!-- Excel导入弹窗 -->
-    <el-dialog v-model="importDialogVisible" title="导入项目预算Excel" width="450px">
+    <el-dialog v-model="importDialogVisible" title="导入项目预算管理Excel" width="450px">
       <el-upload
         ref="uploadRef"
         drag
@@ -112,9 +112,9 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <el-link type="primary" :underline="false" :href="getTemplateUrl('project-budget')" target="_blank">
+            <a :href="getTemplateUrl('project-budget')" target="_blank" class="template-download-link">
               <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
-            </el-link>
+            </a>
           </div>
         </template>
       </el-upload>
@@ -296,7 +296,7 @@ const handleExport = async () => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = '项目预算.xlsx'
+    a.download = '项目预算管理.xlsx'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -316,4 +316,13 @@ onMounted(async () => {
 
 <style scoped>
 .card-header { display: flex; justify-content: space-between; align-items: center; }
+
+.template-download-link {
+  color: var(--el-color-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+.template-download-link:hover {
+  color: var(--el-color-primary-light-3);
+}
 </style>

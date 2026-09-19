@@ -127,9 +127,9 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <el-link type="primary" :underline="false" :href="getTemplateUrl('expense-items')" target="_blank">
+            <a :href="getTemplateUrl('expense-items')" target="_blank" class="template-download-link">
               <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
-            </el-link>
+            </a>
           </div>
         </template>
       </el-upload>
@@ -154,9 +154,9 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <el-link type="primary" :underline="false" :href="getTemplateUrl('vat-items')" target="_blank">
+            <a :href="getTemplateUrl('vat-items')" target="_blank" class="template-download-link">
               <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
-            </el-link>
+            </a>
           </div>
         </template>
       </el-upload>
@@ -266,4 +266,13 @@ onMounted(() => { loadExpenseItems(); loadVatItems() })
 
 <style scoped>
 .card-header { display: flex; justify-content: space-between; align-items: center; }
+
+.template-download-link {
+  color: var(--el-color-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+.template-download-link:hover {
+  color: var(--el-color-primary-light-3);
+}
 </style>
