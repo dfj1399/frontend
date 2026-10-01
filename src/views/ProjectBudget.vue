@@ -291,7 +291,10 @@ const handleImport = async () => {
 const handleDownloadTemplate = () => { window.open(getTemplateUrl('project-budget'), '_blank') }
 const handleExport = async () => {
   try {
-    const res = await exportProjectBudgets(selectedProjectId.value)
+    const params = {}
+    if (selectedProjectId.value) params.projectId = selectedProjectId.value
+    if (selectedClientName.value) params.clientName = selectedClientName.value
+    const res = await exportProjectBudgets(params)
     const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

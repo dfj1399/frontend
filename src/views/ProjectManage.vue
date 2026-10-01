@@ -414,10 +414,30 @@ const handleSubmit = async () => {
     ElMessage.warning('质保金和质保金到账日期必须同时填写')
     return
   }
+  // 校验发票金额累计是否超过合同金额
+  const contractAmt = Number(form.contractAmount || 0)
+  const totalInvoiceAmt = taxDetails.value.reduce((sum, r) => sum + Number(r.invoiceAmount || 0), 0)
+  if (contractAmt > 0 && totalInvoiceAmt > contractAmt) {
+    ElMessage.warning(`发票金额累计（${totalInvoiceAmt.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}）超过合同总金额（${contractAmt.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}），请调整后重试`)
+    return
+  }
   submitLoading.value = true
   try {
-    if (isEdit.value) { const { data: upData } = await updateProject(form); if (upData.code !== 200) { ElMessage.error(upData.message || '更新失败'); return }; ElMessage.success('更新成功') }
-    else {
+    if (isEdit.value) {
+      const { data: upData } = await updateProject(form)
+      if (upData.code !== 200) { ElMessage.error(upData.message || '更新失败'); return }
+      // 编辑模式：自动保存税目明细
+      const items = taxDetails.value
+        .filter(r => r.itemName || r.vatConfigId || Number(r.invoiceAmount) > 0 || Number(r.taxRate) > 0)
+        .map(r => ({ itemName: r.itemName, taxRate: r.taxRate, invoiceAmount: r.invoiceAmount, taxAmount: Number(calcTax(r)), remark: r.remark }))
+      if (items.length) {
+        try {
+          const { data: taxRes } = await saveProjectRevenueTax(form.id, items)
+          if (taxRes.code !== 200) { ElMessage.warning('项目已保存，但税率明细保存失败：' + (taxRes.message || '未知错误')); return }
+        } catch { ElMessage.warning('项目已保存，但税率明细保存失败，可编辑项目后重试'); return }
+      }
+      ElMessage.success('更新成功')
+    } else {
       recalcRevenue()
       const { data } = await addProject(form)
       if (data.code !== 200) { ElMessage.error(data.message || '新增失败'); return }
@@ -479,7 +499,10 @@ const handleImport = async () => {
 
 const handleExport = async () => {
   try {
-    const res = await exportProjects()
+    const params = {}
+    if (selectedClientName.value) params.clientName = selectedClientName.value
+    if (selectedProjectId.value) params.projectId = selectedProjectId.value
+    const res = await exportProjects(params)
     const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

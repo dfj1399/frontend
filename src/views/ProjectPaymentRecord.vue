@@ -14,6 +14,7 @@
             <el-button type="success" v-if="hasPerm('payment:import')" @click="importDialogVisible = true; selectedFile = null">导入Excel</el-button>
             <el-button type="info" @click="handleDownloadTemplate">下载模板</el-button>
             <el-button type="warning" v-if="hasPerm('payment:export')" @click="handleExport">导出Excel</el-button>
+            <el-button type="primary" @click="detailDialogVisible = true">导出明细</el-button>
           </div>
         </div>
       </template>
@@ -398,13 +399,32 @@
         <el-button type="primary" @click="handleImport" :loading="importLoading">导 入</el-button>
       </template>
     </el-dialog>
+    <!-- 导出明细对话框 -->
+    <el-dialog v-model="detailDialogVisible" title="导出明细" width="400px">
+      <el-form label-width="80px">
+        <el-form-item label="年份">
+          <el-select v-model="detailYear" placeholder="全部年份" clearable style="width: 100%">
+            <el-option v-for="y in yearOptions" :key="y" :label="y + '年'" :value="y" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="月份">
+          <el-select v-model="detailMonth" placeholder="全部月份" clearable style="width: 100%">
+            <el-option v-for="m in 12" :key="m" :label="m + '月'" :value="m" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="detailDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleExportDetail" :loading="detailExportLoading">确认导出</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProjects, getClients, importProjectPayments, exportProjectPayments, getPaymentGroupedList, getPaymentOperationsByProject, addPaymentOperation, deletePaymentOperation, getPaymentSettlements, getSettlementTaxDetails, getInvoiceableTaxDetails, getProjectRevenueTax, getActiveVatItems, uploadSettlementDocs, getSettlementDocs, deleteSettlementDoc, permissionStore, loadPermissionsFromCache, getTemplateUrl } from '../api'
+import { getProjects, getClients, importProjectPayments, exportProjectPayments, exportPaymentDetail, getPaymentGroupedList, getPaymentOperationsByProject, addPaymentOperation, deletePaymentOperation, getPaymentSettlements, getSettlementTaxDetails, getInvoiceableTaxDetails, getProjectRevenueTax, getActiveVatItems, uploadSettlementDocs, getSettlementDocs, deleteSettlementDoc, permissionStore, loadPermissionsFromCache, getTemplateUrl } from '../api'
 import { Upload, Download, Plus } from '@element-plus/icons-vue'
 
 loadPermissionsFromCache()
@@ -734,7 +754,13 @@ const currentInvoiceRow = reactive({ id: null, itemName: '', taxRate: 0, settlem
 const newInvoiceAmount = ref(0)
 const invoiceDate = ref('')
 
-const canInvoiceRow = (row) => Number(row.invoiceAmount || 0) > Number(row.issuedInvoiceAmount || 0)
+const canInvoiceRow = (row) => {
+  const invoiceAmt = Number(row.invoiceAmount || 0)
+  const issuedAmt = Number(row.issuedInvoiceAmount || 0)
+  // 正数金额：已开发票额度 < 发票金额，可继续开票
+  // 负数金额：已开发票额度 > 发票金额，可开负数发票冲红
+  return invoiceAmt !== issuedAmt
+}
 
 const openInvoiceDialog = async (row) => {
   currentProjectRow.value = row
@@ -884,6 +910,41 @@ onMounted(async () => {
   try { const { data } = await getActiveVatItems(); activeVatItems.value = data.data || [] } catch { /* ignore */ }
   loadGroupedData()
 })
+
+// 导出明细相关
+const detailDialogVisible = ref(false)
+const detailYear = ref(new Date().getFullYear())
+const detailMonth = ref(null)
+const detailExportLoading = ref(false)
+const yearOptions = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i)
+
+const handleExportDetail = async () => {
+  if (detailMonth.value && !detailYear.value) { ElMessage.warning('选择月份时必须同时选择年份'); return }
+  detailExportLoading.value = true
+  try {
+    const params = {}
+    if (detailYear.value) params.year = detailYear.value
+    if (detailMonth.value) params.month = detailMonth.value
+    if (selectedProjectId.value) params.projectId = selectedProjectId.value
+    if (selectedClientName.value) params.clientName = selectedClientName.value
+    const res = await exportPaymentDetail(params)
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const yearStr = detailYear.value ? detailYear.value + '年' : ''
+    const monthStr = detailMonth.value ? detailMonth.value + '月' : '全年'
+    a.download = yearStr + monthStr + '结算回款明细.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+    detailDialogVisible.value = false
+    ElMessage.success('导出成功')
+  } catch (e) {
+    ElMessage.error('导出失败：' + (e.response?.data?.message || e.message))
+  } finally {
+    detailExportLoading.value = false
+  }
+}
 </script>
 
 <style scoped>

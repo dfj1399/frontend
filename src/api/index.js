@@ -75,8 +75,8 @@ export const importProjects = (file, operator = 'admin') => {
   return api.post('/projects/import', fd, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 60000 })
 }
 
-export const exportProjects = () => {
-  return api.get('/projects/export', { responseType: 'blob', timeout: 60000 })
+export const exportProjects = (params) => {
+  return api.get('/projects/export', { params, responseType: 'blob', timeout: 60000 })
 }
 
 // ==================== 客户管理 ====================
@@ -110,8 +110,8 @@ export const importProjectCosts = (file, operator = 'admin') => {
   const fd = new FormData(); fd.append('file', file); fd.append('operator', operator)
   return api.post('/project-costs/import', fd, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 60000 })
 }
-export const exportProjectCosts = (projectId) => {
-  return api.get('/project-costs/export', { params: projectId ? { projectId } : {}, responseType: 'blob', timeout: 60000 })
+export const exportProjectCosts = (params) => {
+  return api.get('/project-costs/export', { params, responseType: 'blob', timeout: 60000 })
 }
 export const getProjectRevenueSummary = (projectId) => api.get(`/project-costs/revenue-summary/${projectId}`)
 
@@ -126,8 +126,8 @@ export const importProjectBudgets = (file, operator = 'admin') => {
   const fd = new FormData(); fd.append('file', file); fd.append('operator', operator)
   return api.post('/project-budgets/import', fd, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 60000 })
 }
-export const exportProjectBudgets = (projectId) => {
-  return api.get('/project-budgets/export', { params: projectId ? { projectId } : {}, responseType: 'blob', timeout: 60000 })
+export const exportProjectBudgets = (params) => {
+  return api.get('/project-budgets/export', { params, responseType: 'blob', timeout: 60000 })
 }
 export const getBudgetSumCostSubtotal = (projectId) => api.get(`/project-budgets/sum-cost-subtotal/${projectId}`)
 
@@ -233,3 +233,4 @@ export const uploadSettlementDocs = (id, files) => {
 }
 export const getSettlementDocs = (id) => api.get(`/payment-operations/${id}/settlement-docs`)
 export const deleteSettlementDoc = (docId) => api.delete(`/payment-operations/settlement-docs/${docId}`)
+export const exportPaymentDetail = (params) => api.get('/payment-operations/export-detail', { params, responseType: 'blob', timeout: 60000 })
