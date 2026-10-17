@@ -194,6 +194,8 @@ export const getInputTaxReport = (params) => api.get('/reports/input-tax', { par
 export const getCashFlowReport = (params) => api.get('/reports/cash-flow', { params })
 export const getProfitReport = (params) => api.get('/reports/profit', { params })
 export const getProjectLedgerReport = (params) => api.get('/reports/project-ledger', { params })
+export const getVatInvoiceLedger = (params) => api.get('/reports/vat-invoice-ledger', { params })
+export const exportVatInvoiceLedger = (params) => api.get('/reports/vat-invoice-ledger/export', { params, responseType: 'blob', timeout: 60000 })
 
 // 报表导出（返回 blob）
 export const exportReceivableReport = (params) => api.get('/reports/receivable/export', { params, responseType: 'blob', timeout: 60000 })
@@ -201,6 +203,9 @@ export const exportPaymentMonthReport = (params) => api.get('/reports/payment-mo
 export const exportInputTaxReport = (params) => api.get('/reports/input-tax/export', { params, responseType: 'blob', timeout: 60000 })
 export const exportCashFlowReport = (params) => api.get('/reports/cash-flow/export', { params, responseType: 'blob', timeout: 60000 })
 export const exportProfitReport = (params) => api.get('/reports/profit/export', { params, responseType: 'blob', timeout: 60000 })
+
+// ==================== 模板下载 ====================
+export const downloadTemplate = (type) => api.get('/templates/' + type, { responseType: 'blob', timeout: 60000 })
 
 // ==================== 数据备份 ====================
 export const getBackups = () => api.get('/backups')

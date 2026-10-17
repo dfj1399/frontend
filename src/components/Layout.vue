@@ -39,7 +39,7 @@
           </el-menu-item>
           <el-menu-item index="/reports/payment-month">
             <el-icon><Tickets /></el-icon>
-            <span>增值税发票管理台账</span>
+            <span>项目结算发票报表</span>
           </el-menu-item>
           <el-menu-item index="/reports/input-tax">
             <el-icon><Coin /></el-icon>
@@ -52,6 +52,10 @@
           <el-menu-item index="/reports/profit">
             <el-icon><PieChart /></el-icon>
             <span>项目损益汇总表</span>
+          </el-menu-item>
+          <el-menu-item index="/reports/vat-invoice-ledger">
+            <el-icon><Tickets /></el-icon>
+            <span>增值税发票台账</span>
           </el-menu-item>
           <el-menu-item index="/reports/project-ledger">
             <el-icon><DocumentCopy /></el-icon>

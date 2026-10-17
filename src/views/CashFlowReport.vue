@@ -37,9 +37,10 @@
         <el-table-column prop="notInvoicedAmount" label="未票金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.notInvoicedAmount) }}</template></el-table-column>
         <el-table-column prop="receivedAmount" label="收回款项" width="110" align="right"><template #default="{ row }">{{ fmt(row.receivedAmount) }}</template></el-table-column>
         <el-table-column prop="costAmount" label="项目成本支出" width="120" align="right"><template #default="{ row }">{{ fmt(row.costAmount) }}</template></el-table-column>
+        <el-table-column prop="payableAmount" label="应付未付金额" width="120" align="right"><template #default="{ row }">{{ fmt(row.payableAmount) }}</template></el-table-column>
         <el-table-column prop="outputTax" label="应交增值税" width="110" align="right"><template #default="{ row }">{{ fmt(row.outputTax) }}</template></el-table-column>
         <el-table-column prop="businessTax" label="营业税及附加" width="120" align="right"><template #default="{ row }">{{ fmt(row.businessTax) }}</template></el-table-column>
-        <el-table-column prop="handlingFee" label="手续费" width="100" align="right"><template #default="{ row }">{{ fmt(row.handlingFee) }}</template></el-table-column>
+        <el-table-column prop="handlingFee" label="上缴管理费" width="100" align="right"><template #default="{ row }">{{ fmt(row.handlingFee) }}</template></el-table-column>
         <el-table-column prop="managementFee" label="期间费用" width="110" align="right"><template #default="{ row }">{{ fmt(row.managementFee) }}</template></el-table-column>
         <el-table-column prop="loanAmount" label="借款金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.loanAmount) }}</template></el-table-column>
         <el-table-column prop="fundsOccupation" label="资金占用" width="110" align="right"><template #default="{ row }">{{ fmt(row.fundsOccupation) }}</template></el-table-column>
@@ -123,7 +124,7 @@ const loadData = async () => {
 }
 
 const getSummary = ({ columns, data }) => {
-  const sumKeys = ['contractAmount','receivableBalance','invoicedAmount','notInvoicedAmount','receivedAmount','costAmount','outputTax','businessTax','handlingFee','managementFee','loanAmount','fundsOccupation','fundBalance']
+  const sumKeys = ['contractAmount','receivableBalance','invoicedAmount','notInvoicedAmount','receivedAmount','costAmount','payableAmount','outputTax','businessTax','handlingFee','managementFee','loanAmount','fundsOccupation','fundBalance']
   const sums = {}
   sumKeys.forEach(k => { sums[k] = data.reduce((a, r) => a + Number(r[k] || 0), 0) })
   return columns.map((c, i) => {

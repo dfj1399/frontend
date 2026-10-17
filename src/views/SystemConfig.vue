@@ -127,9 +127,9 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <a :href="getTemplateUrl('expense-items')" target="_blank" class="template-download-link">
-              <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
-            </a>
+            <el-button type="primary" link @click="handleDownloadExpenseTemplate">
+                  <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
+                </el-button>
           </div>
         </template>
       </el-upload>
@@ -154,9 +154,9 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <a :href="getTemplateUrl('vat-items')" target="_blank" class="template-download-link">
-              <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
-            </a>
+            <el-button type="primary" link @click="handleDownloadVatTemplate">
+                  <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
+                </el-button>
           </div>
         </template>
       </el-upload>
@@ -171,7 +171,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getExpenseItems, addExpenseItem, updateExpenseItem, deleteExpenseItem, getVatItems, addVatItem, updateVatItem, deleteVatItem, importExpenseItems, importVatItems, permissionStore, getTemplateUrl } from '../api'
+import { getExpenseItems, addExpenseItem, updateExpenseItem, deleteExpenseItem, getVatItems, addVatItem, updateVatItem, deleteVatItem, importExpenseItems, importVatItems, permissionStore, downloadTemplate } from '../api'
 import { Upload, Download } from '@element-plus/icons-vue'
 
 const hasPerm = (code) => permissionStore.has(code)

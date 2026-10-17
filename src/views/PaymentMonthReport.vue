@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>增值税发票管理台账</span>
+          <span>项目结算发票报表</span>
           <div>
             <el-select v-model="query.clientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
@@ -132,7 +132,7 @@ const handleExport = async () => {
     const url = window.URL.createObjectURL(new Blob([data]))
     const link = document.createElement('a')
     link.href = url
-    link.download = '增值税发票管理台账.xlsx'
+    link.download = '项目结算发票报表.xlsx'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)

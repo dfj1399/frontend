@@ -65,6 +65,11 @@ const routes = [
         component: () => import('../views/ProfitReport.vue')
       },
       {
+        path: 'reports/vat-invoice-ledger',
+        name: 'VatInvoiceLedger',
+        component: () => import('../views/VatInvoiceLedger.vue')
+      },
+      {
         path: 'reports/project-ledger',
         name: 'ProjectLedger',
         component: () => import('../views/ProjectLedger.vue')

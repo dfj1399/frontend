@@ -6,6 +6,7 @@
           <span>客户管理</span>
           <div>
             <el-button type="success" @click="importDialogVisible = true" v-if="hasPerm('client:create')">导入</el-button>
+            <el-button type="warning" @click="handleExport" :loading="exportLoading">导出</el-button>
             <el-button type="primary" @click="handleAdd" v-if="hasPerm('client:create')">新增客户</el-button>
           </div>
         </div>
@@ -55,7 +56,7 @@
         <el-form-item label="开户行">
           <el-input v-model="form.bankName" />
         </el-form-item>
-        <el-form-item label="银行卡号">
+        <el-form-item label="银行卡账号" label-width="100px">
           <el-input v-model="form.bankAccount" />
         </el-form-item>
         <el-form-item label="备注">
@@ -70,9 +71,6 @@
 
     <!-- 导入对话框 -->
     <el-dialog v-model="importDialogVisible" title="导入客户" width="480px">
-      <div style="margin-bottom: 12px">
-        <a :href="templateUrl" target="_blank" class="template-download-link">下载导入模板</a>
-      </div>
       <el-upload
         ref="uploadRef"
         drag
@@ -87,6 +85,13 @@
           <div style="font-size: 40px; color: #909399">&#xe634;</div>
           <div>将 Excel 文件拖到此处，或 <em>点击上传</em></div>
         </div>
+        <template #tip>
+          <div class="el-upload__tip">
+            <el-link type="primary" :underline="false" @click="handleDownloadTemplate">
+              <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
+            </el-link>
+          </div>
+        </template>
       </el-upload>
       <template #footer>
         <el-button @click="importDialogVisible = false">取 消</el-button>
@@ -97,13 +102,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getClients, addClient, updateClient, deleteClient, importClients, checkClientDuplicate, permissionStore, getTemplateUrl } from '../api'
+import { Download } from '@element-plus/icons-vue'
+import { getClients, addClient, updateClient, deleteClient, importClients, exportClients, checkClientDuplicate, permissionStore, downloadTemplate } from '../api'
 
 const loading = ref(false)
 const submitLoading = ref(false)
 const importLoading = ref(false)
+const exportLoading = ref(false)
 const dialogVisible = ref(false)
 const importDialogVisible = ref(false)
 const isEdit = ref(false)
@@ -114,7 +121,6 @@ const importFile = ref(null)
 const duplicateNameMsg = ref('')
 const duplicateTaxMsg = ref('')
 
-const templateUrl = computed(() => getTemplateUrl('client'))
 
 const form = reactive({
   id: null, clientName: '', contactPerson: '', contactPhone: '', contactEmail: '', address: '', taxNo: '', bankName: '', bankAccount: '', remark: ''
@@ -250,6 +256,42 @@ const handleImport = async () => {
     ElMessage.error(e.response?.data?.message || '导入失败')
   } finally {
     importLoading.value = false
+  }
+}
+
+
+
+const handleDownloadTemplate = async () => {
+  try {
+    const res = await downloadTemplate('client')
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '客户导入模板.xlsx'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch (e) { ElMessage.error('下载失败：' + (e.response?.data?.message || e.message)) }
+}
+
+const handleExport = async () => {
+  exportLoading.value = true
+  try {
+    const res = await exportClients()
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = '客户列表.xlsx'
+    link.click()
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch (e) {
+    ElMessage.error('导出失败')
+  } finally {
+    exportLoading.value = false
   }
 }
 

@@ -30,7 +30,6 @@
         <el-table-column prop="projectCode" label="项目编号" width="110" />
         <el-table-column prop="projectName" label="项目名称" min-width="140" show-overflow-tooltip />
         <el-table-column prop="clientName" label="客户名称" width="110" show-overflow-tooltip />
-        <el-table-column prop="contractAmount" label="合同金额" width="120" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
         <el-table-column prop="settlementAmount" label="结算金额" width="120" align="right"><template #default="{ row }">{{ fmt(row.settlementAmount) }}</template></el-table-column>
         <el-table-column prop="invoicedAmount" label="已开发票" width="120" align="right"><template #default="{ row }">{{ fmt(row.invoicedAmount) }}</template></el-table-column>
         <el-table-column prop="receivedAmount" label="已回款" width="120" align="right"><template #default="{ row }">{{ fmt(row.receivedAmount) }}</template></el-table-column>
@@ -128,7 +127,7 @@ const loadData = async () => {
 }
 
 const getSummary = ({ columns, data }) => {
-  const sumKeys = ['contractAmount','settlementAmount','invoicedAmount','receivedAmount','settledNotInvoiced','invoicedNotReceived','subtotal','deposit']
+  const sumKeys = ['settlementAmount','invoicedAmount','receivedAmount','settledNotInvoiced','invoicedNotReceived','subtotal','deposit']
   const sums = {}
   sumKeys.forEach(k => { sums[k] = data.reduce((a, r) => a + Number(r[k] || 0), 0) })
   return columns.map((c, i) => {

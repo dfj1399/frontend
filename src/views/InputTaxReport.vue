@@ -27,7 +27,7 @@
         <el-table-column prop="projectCode" label="项目编号" width="110" />
         <el-table-column prop="projectName" label="项目名称" min-width="150" show-overflow-tooltip />
         <el-table-column prop="clientName" label="客户名称" width="110" show-overflow-tooltip />
-        <el-table-column prop="lastYearTax" label="上年度" width="110" align="right"><template #default="{ row }">{{ fmt(row.lastYearTax) }}</template></el-table-column>
+        <el-table-column prop="cumulativeTax" label="累计金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.cumulativeTax) }}</template></el-table-column>
         <el-table-column v-for="m in 12" :key="'it'+m" :prop="'m'+m+'Tax'" :label="m+'月'" width="100" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'Tax']) }}</template></el-table-column>
         <el-table-column prop="yearTax" label="本年累计" width="120" align="right"><template #default="{ row }">{{ fmt(row.yearTax) }}</template></el-table-column>
       </el-table>
@@ -108,7 +108,7 @@ const loadData = async () => {
 }
 
 const getSummary = ({ columns, data }) => {
-  const sumKeys = ['lastYearTax','yearTax']
+  const sumKeys = ['cumulativeTax','yearTax']
   for (let m = 1; m <= 12; m++) sumKeys.push('m' + m + 'Tax')
   const sums = {}
   sumKeys.forEach(k => { sums[k] = data.reduce((a, r) => a + Number(r[k] || 0), 0) })

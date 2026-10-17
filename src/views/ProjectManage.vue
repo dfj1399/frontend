@@ -72,7 +72,7 @@
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="合同金额"><el-input :model-value="form.contractAmount" @input="(v) => form.contractAmount = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item>
+            <el-form-item label="合同金额"><el-input :model-value="formatMoney(form.contractAmount)" disabled style="width:100%" /></el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="总预算"><el-input :model-value="formatMoney(form.totalBudget)" disabled style="width:100%" /></el-form-item>
@@ -80,10 +80,10 @@
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="预计成本"><el-input :model-value="formatMoney(form.estimatedCost)" disabled style="width:100%" /></el-form-item>
+            <el-form-item label="上缴管理费"><el-input :model-value="formatMoney(uploadFeeAmount)" disabled style="width:100%" /></el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="手续费费率">
+            <el-form-item label="上缴管理费率">
               <el-input :model-value="form.handlingFeeRate" @input="(v) => form.handlingFeeRate = allowNumber(v)" placeholder="请输入数字" style="width:calc(100% - 24px)" />
               <span style="margin-left:4px;color:#606266">%</span>
             </el-form-item>
@@ -188,9 +188,9 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <a :href="getTemplateUrl('project')" target="_blank" class="template-download-link">
+            <el-button type="primary" link @click="handleDownloadTemplate">
               <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
-            </a>
+            </el-button>
           </div>
         </template>
       </el-upload>
@@ -205,7 +205,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProjects, addProject, updateProject, deleteProject, importProjects, exportProjects, getProjectRevenueTax, saveProjectRevenueTax, getActiveVatItems, getBudgetSumCostSubtotal, getClients, getProjectOwners, permissionStore, getTemplateUrl } from '../api'
+import { getProjects, addProject, updateProject, deleteProject, importProjects, exportProjects, getProjectRevenueTax, saveProjectRevenueTax, getActiveVatItems, getBudgetSumCostSubtotal, getClients, getProjectOwners, permissionStore, downloadTemplate } from '../api'
 import { Upload, Download } from '@element-plus/icons-vue'
 
 const loading = ref(false)
@@ -315,9 +315,14 @@ const calcTax = (row) => {
 const totalTax = computed(() => taxDetails.value.reduce((sum, r) => sum + Number(calcTax(r)), 0))
 
 const recalcRevenue = () => {
-  form.revenueWithTax = Number(form.contractAmount || 0)
-  form.revenueWithoutTax = Number(form.contractAmount || 0) - totalTax.value
+  const totalInvoice = taxDetails.value.reduce((sum, r) => sum + Number(r.invoiceAmount || 0), 0)
+  form.contractAmount = totalInvoice
+  form.revenueWithTax = totalInvoice
+  form.revenueWithoutTax = totalInvoice - totalTax.value
 }
+
+// 上缴管理费 = 项目结算金额 x 上缴管理费费率
+const uploadFeeAmount = computed(() => Number(form.settlementAmount || 0) * Number(form.handlingFeeRate || 0) / 100)
 
 // 税目变化时联动更新营业收入(含税/除税)
 watch(taxDetails, recalcRevenue, { deep: true })
@@ -414,13 +419,6 @@ const handleSubmit = async () => {
     ElMessage.warning('质保金和质保金到账日期必须同时填写')
     return
   }
-  // 校验发票金额累计是否超过合同金额
-  const contractAmt = Number(form.contractAmount || 0)
-  const totalInvoiceAmt = taxDetails.value.reduce((sum, r) => sum + Number(r.invoiceAmount || 0), 0)
-  if (contractAmt > 0 && totalInvoiceAmt > contractAmt) {
-    ElMessage.warning(`发票金额累计（${totalInvoiceAmt.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}）超过合同总金额（${contractAmt.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}），请调整后重试`)
-    return
-  }
   submitLoading.value = true
   try {
     if (isEdit.value) {
@@ -495,6 +493,26 @@ const handleImport = async () => {
     }
   } catch (e) { ElMessage.error('导入失败：' + (e.response?.data?.message || e.message)) }
   finally { importLoading.value = false; selectedFile.value = null }
+}
+
+const handleDownloadTemplate = async () => {
+  try {
+    const res = await downloadTemplate('project')
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    // 检查是否返回了错误（blob 可能是 JSON 错误信息）
+    if (res.data.type === 'application/json') {
+      const text = await blob.text()
+      const err = JSON.parse(text)
+      ElMessage.error(err.message || '模板下载失败')
+      return
+    }
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '项目管理导入模板.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (e) { ElMessage.error('模板下载失败：' + (e.message || '未知错误')) }
 }
 
 const handleExport = async () => {

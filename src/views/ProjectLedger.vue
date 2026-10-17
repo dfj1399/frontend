@@ -88,8 +88,8 @@ const report = reactive({ projectId: null, projectCode: '', projectName: '', own
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
 
-// 指标情况、结算情况为纯标题行，不显示任何金额数据
-const blankRows = ['指标情况', '结算情况']
+// 项目支出、指标情况、结算情况为纯标题行，不显示任何金额数据
+const blankRows = ['项目支出', '指标情况', '结算情况']
 const fmtCell = (row, v) => blankRows.includes(row.itemName) ? '' : fmt(v)
 
 const allowNumber = (v) => {

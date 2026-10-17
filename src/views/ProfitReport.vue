@@ -37,7 +37,6 @@
         <el-table-column prop="businessTax" label="营业税及附加" width="120" align="right"><template #default="{ row }">{{ fmt(row.businessTax) }}</template></el-table-column>
         <el-table-column label="营业成本" align="center">
           <el-table-column prop="actualCost" label="实际发生" width="110" align="right"><template #default="{ row }">{{ fmt(row.actualCost) }}</template></el-table-column>
-          <el-table-column prop="estimatedCost" label="预计成本" width="110" align="right"><template #default="{ row }">{{ fmt(row.estimatedCost) }}</template></el-table-column>
           <el-table-column prop="totalCost" label="合计" width="110" align="right"><template #default="{ row }">{{ fmt(row.totalCost) }}</template></el-table-column>
         </el-table-column>
         <el-table-column prop="operatingProfit" label="营业利润" width="110" align="right"><template #default="{ row }">{{ fmt(row.operatingProfit) }}</template></el-table-column>
@@ -127,7 +126,7 @@ const loadData = async () => {
 }
 
 const getSummary = ({ columns, data }) => {
-  const sumKeys = ['contractAmount','settlementAmount','revenueWithoutTax','businessTax','actualCost','estimatedCost','totalCost','operatingProfit','periodManagementFee','periodFinancialFee','periodTotalFee','profitBeforeTax']
+  const sumKeys = ['contractAmount','settlementAmount','revenueWithoutTax','businessTax','actualCost','totalCost','operatingProfit','periodManagementFee','periodFinancialFee','periodTotalFee','profitBeforeTax']
   const sums = {}
   sumKeys.forEach(k => { sums[k] = data.reduce((a, r) => a + Number(r[k] || 0), 0) })
   return columns.map((c, i) => {

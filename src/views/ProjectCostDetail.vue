@@ -40,7 +40,7 @@
         <el-table-column prop="periodFinancialFee" label="期间财务" width="100" align="right"><template #default="{ row }">{{ fmt(row.periodFinancialFee) }}</template></el-table-column>
         <el-table-column prop="projectCostAmount" label="项目成本支出(含税)" width="150" align="right"><template #default="{ row }">{{ fmt(row.projectCostAmount) }}</template></el-table-column>
         <el-table-column prop="loanAmount" label="借款费用" width="100" align="right"><template #default="{ row }">{{ fmt(row.loanAmount) }}</template></el-table-column>
-        <el-table-column prop="grossMarginRate" label="毛利率(%)" width="100" align="right"><template #default="{ row }">{{ row.grossMarginRate != null ? Number(row.grossMarginRate).toFixed(2) : '-' }}</template></el-table-column>
+        <el-table-column prop="grossMarginRate" label="毛利率(%)" width="100" align="right"><template #default="{ row }">{{ row.grossMarginRate != null ? Number(row.grossMarginRate).toFixed(2) + '%' : '-' }}</template></el-table-column>
         <el-table-column prop="fundsOccupation" label="资金占用" width="100" align="right"><template #default="{ row }">{{ fmt(row.fundsOccupation) }}</template></el-table-column>
         <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
         <el-table-column label="操作" width="180" fixed="right">
@@ -96,7 +96,7 @@
         <el-row :gutter="16">
           <el-col :span="8"><el-form-item label="项目成本支出"><el-input :model-value="form.projectCostAmount" @input="(v) => form.projectCostAmount = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="借款费用"><el-input :model-value="form.loanAmount" @input="(v) => form.loanAmount = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="毛利率(%)"><el-input :model-value="form.grossMarginRate != null ? Number(form.grossMarginRate).toFixed(2) : '-'" disabled style="width:100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="毛利率(%)"><el-input :model-value="form.grossMarginRate != null ? Number(form.grossMarginRate).toFixed(2) + '%' : '-'" disabled style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="资金占用"><el-input :model-value="form.fundsOccupation" @input="(v) => form.fundsOccupation = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
         </el-row>
         <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
@@ -123,9 +123,9 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <a :href="getTemplateUrl('expense-items')" target="_blank" class="template-download-link">
+            <el-button type="primary" link @click="handleDownloadTemplate">
               <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
-            </a>
+            </el-button>
           </div>
         </template>
       </el-upload>
@@ -140,7 +140,7 @@
 <script setup>
 import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProjects, getClients, getProjectCosts, getProjectCostsByProject, addProjectCost, updateProjectCost, deleteProjectCost, importProjectCosts, exportProjectCosts, getTemplateUrl } from '../api'
+import { getProjects, getClients, getProjectCosts, getProjectCostsByProject, addProjectCost, updateProjectCost, deleteProjectCost, importProjectCosts, exportProjectCosts, downloadTemplate } from '../api'
 import { Upload, Download } from '@element-plus/icons-vue'
 
 const loading = ref(false); const submitLoading = ref(false); const dialogVisible = ref(false); const isEdit = ref(false)
@@ -302,7 +302,20 @@ const handleImport = async () => {
   } catch (e) { ElMessage.error('导入失败：' + (e.response?.data?.message || e.message)) }
   finally { importLoading.value = false; selectedFile.value = null }
 }
-const handleDownloadTemplate = () => { window.open(getTemplateUrl('expense-items'), '_blank') }
+const handleDownloadTemplate = async () => {
+  try {
+    const res = await downloadTemplate('expense-items')
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '项目成本详情导入模板.xlsx'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch (e) { ElMessage.error('下载失败：' + (e.response?.data?.message || e.message)) }
+}
 const handleExport = async () => {
   try {
     const params = {}

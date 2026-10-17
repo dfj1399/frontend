@@ -388,9 +388,9 @@
         <template #tip>
           <div class="el-upload__tip">仅支持 .xlsx / .xls 文件</div>
           <div style="margin-top:8px">
-            <a :href="getTemplateUrl('project-payment')" target="_blank" class="template-download-link">
+            <el-button type="primary" link @click="handleDownloadTemplate">
               <el-icon style="vertical-align:middle"><Download /></el-icon> 下载导入模板
-            </a>
+            </el-button>
           </div>
         </template>
       </el-upload>
@@ -424,7 +424,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProjects, getClients, importProjectPayments, exportProjectPayments, exportPaymentDetail, getPaymentGroupedList, getPaymentOperationsByProject, addPaymentOperation, deletePaymentOperation, getPaymentSettlements, getSettlementTaxDetails, getInvoiceableTaxDetails, getProjectRevenueTax, getActiveVatItems, uploadSettlementDocs, getSettlementDocs, deleteSettlementDoc, permissionStore, loadPermissionsFromCache, getTemplateUrl } from '../api'
+import { getProjects, getClients, importProjectPayments, exportProjectPayments, exportPaymentDetail, getPaymentGroupedList, getPaymentOperationsByProject, addPaymentOperation, deletePaymentOperation, getPaymentSettlements, getSettlementTaxDetails, getInvoiceableTaxDetails, getProjectRevenueTax, getActiveVatItems, uploadSettlementDocs, getSettlementDocs, deleteSettlementDoc, permissionStore, loadPermissionsFromCache, downloadTemplate } from '../api'
 import { Upload, Download, Plus } from '@element-plus/icons-vue'
 
 loadPermissionsFromCache()
@@ -887,7 +887,20 @@ const handleImport = async () => {
   } catch (e) { ElMessage.error('导入失败：' + (e.response?.data?.message || e.message)) }
   finally { importLoading.value = false; selectedFile.value = null }
 }
-const handleDownloadTemplate = () => { window.open(getTemplateUrl('project-payment'), '_blank') }
+const handleDownloadTemplate = async () => {
+  try {
+    const res = await downloadTemplate('project-payment')
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '项目结算回款导入模板.xlsx'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch (e) { ElMessage.error('下载失败：' + (e.response?.data?.message || e.message)) }
+}
 const handleExport = async () => {
   try {
     const params = {}
