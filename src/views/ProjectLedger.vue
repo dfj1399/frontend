@@ -10,6 +10,7 @@
             </el-select>
             <el-date-picker v-model="query.year" type="year" format="YYYY" value-format="YYYY" placeholder="选择年份" clearable style="width:130px;margin-right:8px" />
             <el-button type="primary" @click="loadData" :loading="loading">查询</el-button>
+            <el-button @click="handleExport" :loading="exporting">导出</el-button>
           </div>
         </div>
       </template>
@@ -79,9 +80,10 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getProjects, getProjectLedgerReport } from '../api'
+import { getProjects, getProjectLedgerReport, exportProjectLedgerReport } from '../api'
 
 const loading = ref(false)
+const exporting = ref(false)
 const projects = ref([])
 const query = reactive({ year: new Date().getFullYear(), projectId: null })
 const report = reactive({ projectId: null, projectCode: '', projectName: '', owner: '', year: null, rows: [] })
@@ -149,6 +151,31 @@ const loadData = async () => {
     ElMessage.error('项目台账加载失败：' + (e.response?.data?.message || e.message))
   } finally {
     loading.value = false
+  }
+}
+
+const handleExport = async () => {
+  if (!query.projectId) {
+    ElMessage.warning('请选择项目')
+    return
+  }
+  exporting.value = true
+  const params = { projectId: query.projectId }
+  if (query.year) params.year = query.year
+  try {
+    const { data } = await exportProjectLedgerReport(params)
+    const url = window.URL.createObjectURL(new Blob([data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = '项目台账.xlsx'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (e) {
+    ElMessage.error('导出失败：' + (e.response?.data?.message || e.message))
+  } finally {
+    exporting.value = false
   }
 }
 

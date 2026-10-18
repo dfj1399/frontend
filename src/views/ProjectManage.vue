@@ -312,13 +312,9 @@ const calcTax = (row) => {
   return (amt * rate / (100 + rate)).toFixed(2)
 }
 
-const totalTax = computed(() => taxDetails.value.reduce((sum, r) => sum + Number(calcTax(r)), 0))
-
 const recalcRevenue = () => {
   const totalInvoice = taxDetails.value.reduce((sum, r) => sum + Number(r.invoiceAmount || 0), 0)
   form.contractAmount = totalInvoice
-  form.revenueWithTax = totalInvoice
-  form.revenueWithoutTax = totalInvoice - totalTax.value
 }
 
 // 上缴管理费 = 项目结算金额 x 上缴管理费费率

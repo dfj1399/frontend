@@ -40,6 +40,8 @@
         <el-table-column prop="periodFinancialFee" label="期间财务" width="100" align="right"><template #default="{ row }">{{ fmt(row.periodFinancialFee) }}</template></el-table-column>
         <el-table-column prop="projectCostAmount" label="项目成本支出(含税)" width="150" align="right"><template #default="{ row }">{{ fmt(row.projectCostAmount) }}</template></el-table-column>
         <el-table-column prop="loanAmount" label="借款费用" width="100" align="right"><template #default="{ row }">{{ fmt(row.loanAmount) }}</template></el-table-column>
+        <el-table-column prop="projectLoanStatus" label="借款状态" width="100" align="center"><template #default="{ row }">{{ row.projectLoanStatus || '未借款' }}</template></el-table-column>
+        <el-table-column prop="projectLoanClearTime" label="清算借款时间" width="130" align="center"><template #default="{ row }">{{ row.projectLoanClearTime ? String(row.projectLoanClearTime).replace('T', ' ').substring(0, 16) : '-' }}</template></el-table-column>
         <el-table-column prop="grossMarginRate" label="毛利率(%)" width="100" align="right"><template #default="{ row }">{{ row.grossMarginRate != null ? Number(row.grossMarginRate).toFixed(2) + '%' : '-' }}</template></el-table-column>
         <el-table-column prop="fundsOccupation" label="资金占用" width="100" align="right"><template #default="{ row }">{{ fmt(row.fundsOccupation) }}</template></el-table-column>
         <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
@@ -96,6 +98,8 @@
         <el-row :gutter="16">
           <el-col :span="8"><el-form-item label="项目成本支出"><el-input :model-value="form.projectCostAmount" @input="(v) => form.projectCostAmount = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="借款费用"><el-input :model-value="form.loanAmount" @input="(v) => form.loanAmount = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="借款状态"><el-input :model-value="form.projectLoanStatus || '未借款'" disabled style="width:100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item label="清算借款时间"><el-input :model-value="form.projectLoanClearTime ? String(form.projectLoanClearTime).replace('T', ' ').substring(0, 16) : '-'" disabled style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="毛利率(%)"><el-input :model-value="form.grossMarginRate != null ? Number(form.grossMarginRate).toFixed(2) + '%' : '-'" disabled style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="资金占用"><el-input :model-value="form.fundsOccupation" @input="(v) => form.fundsOccupation = allowNumber(v)" placeholder="请输入数字" style="width:100%" /></el-form-item></el-col>
         </el-row>
@@ -160,7 +164,7 @@ const onClientChange = () => {
   loadData()
 }
 
-const form = reactive({ id: null, projectId: null, recordDate: '', recordYear: null, recordMonth: null, revenueWithTax: 0, revenueWithoutTax: 0, directMaterialCost: 0, directLaborCost: 0, directMachineryCost: 0, directExpense: 0, indirectManagementFee: 0, otherCost: 0, costSubtotal: 0, operatingProfit: 0, inputTax: 0, periodManagementFee: 0, periodFinancialFee: 0, projectCostAmount: 0, loanAmount: 0, fundsOccupation: 0, grossMarginRate: 0, remark: '', createdBy: '', updatedBy: '' })
+const form = reactive({ id: null, projectId: null, recordDate: '', recordYear: null, recordMonth: null, revenueWithTax: 0, revenueWithoutTax: 0, directMaterialCost: 0, directLaborCost: 0, directMachineryCost: 0, directExpense: 0, indirectManagementFee: 0, otherCost: 0, costSubtotal: 0, operatingProfit: 0, inputTax: 0, periodManagementFee: 0, periodFinancialFee: 0, projectCostAmount: 0, loanAmount: 0, projectLoanStatus: '', projectLoanClearTime: null, fundsOccupation: 0, grossMarginRate: 0, remark: '', createdBy: '', updatedBy: '' })
 const rules = { projectId: [{ required: true, message: '请选择项目', trigger: 'change' }], recordDate: [{ required: true, message: '请选择日期', trigger: 'change' }] }
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
@@ -198,6 +202,8 @@ const onProjectChange = (projectId) => {
   if (project) {
     form.revenueWithTax = Number(project.revenueWithTax || 0)
     form.revenueWithoutTax = Number(project.revenueWithoutTax || 0)
+    form.projectLoanStatus = project.loanStatus || '未借款'
+    form.projectLoanClearTime = project.loanClearTime || null
   } else {
     form.revenueWithTax = 0
     form.revenueWithoutTax = 0
@@ -249,7 +255,7 @@ const loadData = async () => {
   finally { loading.value = false }
 }
 
-const resetForm = () => { Object.assign(form, { id: null, projectId: null, recordDate: '', recordYear: null, recordMonth: null, revenueWithTax: 0, revenueWithoutTax: 0, directMaterialCost: 0, directLaborCost: 0, directMachineryCost: 0, directExpense: 0, indirectManagementFee: 0, otherCost: 0, costSubtotal: 0, operatingProfit: 0, inputTax: 0, periodManagementFee: 0, periodFinancialFee: 0, projectCostAmount: 0, loanAmount: 0, fundsOccupation: 0, grossMarginRate: 0, remark: '', createdBy: '', updatedBy: '' }) }
+const resetForm = () => { Object.assign(form, { id: null, projectId: null, recordDate: '', recordYear: null, recordMonth: null, revenueWithTax: 0, revenueWithoutTax: 0, directMaterialCost: 0, directLaborCost: 0, directMachineryCost: 0, directExpense: 0, indirectManagementFee: 0, otherCost: 0, costSubtotal: 0, operatingProfit: 0, inputTax: 0, periodManagementFee: 0, periodFinancialFee: 0, projectCostAmount: 0, loanAmount: 0, projectLoanStatus: '', projectLoanClearTime: null, fundsOccupation: 0, grossMarginRate: 0, remark: '', createdBy: '', updatedBy: '' }) }
 
 const handleAdd = () => { resetForm(); isEdit.value = false; dialogVisible.value = true }
 const handleEdit = (row) => { resetForm(); isEdit.value = true; Object.keys(form).forEach(k => { if (row[k] !== undefined) form[k] = row[k] }); dialogVisible.value = true }

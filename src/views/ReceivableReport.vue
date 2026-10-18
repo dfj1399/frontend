@@ -42,6 +42,7 @@
             <span :style="isUrgent(row.depositPeriod) ? 'color:red;font-weight:bold' : ''">{{ row.depositPeriod }}</span>
           </template>
         </el-table-column>
+        <el-table-column prop="finalSettlement" label="最终结算" width="120" align="center"><template #default="{ row }">{{ row.finalSettlement || '-' }}</template></el-table-column>
       </el-table>
     </el-card>
   </div>

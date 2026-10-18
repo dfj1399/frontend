@@ -203,6 +203,7 @@ export const exportPaymentMonthReport = (params) => api.get('/reports/payment-mo
 export const exportInputTaxReport = (params) => api.get('/reports/input-tax/export', { params, responseType: 'blob', timeout: 60000 })
 export const exportCashFlowReport = (params) => api.get('/reports/cash-flow/export', { params, responseType: 'blob', timeout: 60000 })
 export const exportProfitReport = (params) => api.get('/reports/profit/export', { params, responseType: 'blob', timeout: 60000 })
+export const exportProjectLedgerReport = (params) => api.get('/reports/project-ledger/export', { params, responseType: 'blob', timeout: 60000 })
 
 // ==================== 模板下载 ====================
 export const downloadTemplate = (type) => api.get('/templates/' + type, { responseType: 'blob', timeout: 60000 })
