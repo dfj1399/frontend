@@ -5,10 +5,10 @@
         <div class="card-header">
           <span>项目结算发票报表</span>
           <div>
-            <el-select v-model="query.clientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
+            <el-select v-model="query.clientName" placeholder="选择客户" clearable filterable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
             </el-select>
-            <el-select v-model="query.projectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px">
+            <el-select v-model="query.projectId" placeholder="选择项目" clearable filterable style="width:220px;margin-right:8px">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
             <el-select v-model="query.owner" placeholder="选择负责人" clearable style="width:140px;margin-right:8px" @change="onOwnerChange">
@@ -18,30 +18,30 @@
               <el-option v-for="y in years" :key="y" :label="y + '年'" :value="y" />
             </el-select>
             <el-button type="primary" @click="loadData" :loading="loading">查询</el-button>
-            <el-button @click="handleExport" :loading="exporting">导出</el-button>
+            <el-button @click="handleExport" :loading="exporting" v-if="permissionStore.has('report:payment-month-export')">导出</el-button>
           </div>
         </div>
       </template>
 
-      <el-table :data="tableData" v-loading="loading" stripe size="small">
-        <el-table-column prop="projectCode" label="项目编号" width="100" />
+      <el-table :data="tableData" v-loading="loading" stripe size="small" show-summary :summary-method="getSummary">
+        <el-table-column prop="projectCode" label="项目编号" class-name="cell-nowrap" width="165" />
         <el-table-column prop="projectName" label="项目名称" width="130" show-overflow-tooltip />
         <el-table-column prop="clientName" label="客户" width="100" show-overflow-tooltip />
-        <el-table-column prop="contractAmount" label="合同金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
+        <el-table-column prop="contractAmount" label="合同金额" width="130" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
         <el-table-column label="项目累计" align="center">
-          <el-table-column prop="totalSettlementAmount" label="结算" width="100" align="right"><template #default="{ row }">{{ fmt(row.totalSettlementAmount) }}</template></el-table-column>
-          <el-table-column prop="totalInvoiceAmount" label="已开发票" width="100" align="right"><template #default="{ row }">{{ fmt(row.totalInvoiceAmount) }}</template></el-table-column>
-          <el-table-column prop="totalPaymentAmount" label="回款" width="100" align="right"><template #default="{ row }">{{ fmt(row.totalPaymentAmount) }}</template></el-table-column>
+          <el-table-column prop="totalSettlementAmount" label="结算" width="130" align="right"><template #default="{ row }">{{ fmt(row.totalSettlementAmount) }}</template></el-table-column>
+          <el-table-column prop="totalInvoiceAmount" label="已开发票" width="130" align="right"><template #default="{ row }">{{ fmt(row.totalInvoiceAmount) }}</template></el-table-column>
+          <el-table-column prop="totalPaymentAmount" label="回款" width="130" align="right"><template #default="{ row }">{{ fmt(row.totalPaymentAmount) }}</template></el-table-column>
         </el-table-column>
         <el-table-column label="当年合计" align="center">
-          <el-table-column prop="yearSettlementAmount" label="结算" width="100" align="right"><template #default="{ row }">{{ fmt(row.yearSettlementAmount) }}</template></el-table-column>
-          <el-table-column prop="yearInvoiceAmount" label="已开发票" width="100" align="right"><template #default="{ row }">{{ fmt(row.yearInvoiceAmount) }}</template></el-table-column>
-          <el-table-column prop="yearPaymentAmount" label="回款" width="100" align="right"><template #default="{ row }">{{ fmt(row.yearPaymentAmount) }}</template></el-table-column>
+          <el-table-column prop="yearSettlementAmount" label="结算" width="130" align="right"><template #default="{ row }">{{ fmt(row.yearSettlementAmount) }}</template></el-table-column>
+          <el-table-column prop="yearInvoiceAmount" label="已开发票" width="130" align="right"><template #default="{ row }">{{ fmt(row.yearInvoiceAmount) }}</template></el-table-column>
+          <el-table-column prop="yearPaymentAmount" label="回款" width="130" align="right"><template #default="{ row }">{{ fmt(row.yearPaymentAmount) }}</template></el-table-column>
         </el-table-column>
         <el-table-column v-for="m in 12" :key="'pm'+m" :label="m+'月'" align="center" width="180">
-          <el-table-column :prop="'m'+m+'SettlementAmount'" label="结算" width="60" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'SettlementAmount']) }}</template></el-table-column>
-          <el-table-column :prop="'m'+m+'InvoiceAmount'" label="发票" width="60" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'InvoiceAmount']) }}</template></el-table-column>
-          <el-table-column :prop="'m'+m+'PaymentAmount'" label="回款" width="60" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'PaymentAmount']) }}</template></el-table-column>
+          <el-table-column :prop="'m'+m+'SettlementAmount'" label="结算" width="110" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'SettlementAmount']) }}</template></el-table-column>
+          <el-table-column :prop="'m'+m+'InvoiceAmount'" label="发票" width="110" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'InvoiceAmount']) }}</template></el-table-column>
+          <el-table-column :prop="'m'+m+'PaymentAmount'" label="回款" width="110" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'PaymentAmount']) }}</template></el-table-column>
         </el-table-column>
       </el-table>
     </el-card>
@@ -51,7 +51,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getProjects, getClients, getProjectOwners, getPaymentMonthReport, exportPaymentMonthReport } from '../api'
+import { getProjects, getClients, getProjectOwners, getPaymentMonthReport, exportPaymentMonthReport, permissionStore } from '../api'
 
 const loading = ref(false)
 const exporting = ref(false)
@@ -69,6 +69,18 @@ const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 
 const tableData = ref([])
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
+
+const getSummary = ({ columns, data }) => {
+  const sumProps = ['contractAmount', 'totalSettlementAmount', 'totalInvoiceAmount', 'totalPaymentAmount', 'yearSettlementAmount', 'yearInvoiceAmount', 'yearPaymentAmount']
+  for (let m = 1; m <= 12; m++) sumProps.push('m' + m + 'SettlementAmount', 'm' + m + 'InvoiceAmount', 'm' + m + 'PaymentAmount')
+  const sums = {}
+  sumProps.forEach(p => { sums[p] = data.reduce((a, r) => a + Number(r[p] || 0), 0) })
+  return columns.map((c, i) => {
+    if (i === 0) return '合计'
+    if (sums[c.property] !== undefined) return sums[c.property].toLocaleString('zh-CN', { minimumFractionDigits: 2 })
+    return ''
+  })
+}
 
 const allowNumber = (v) => {
   let s = String(v).replace(/[^\d.\-]/g, '')

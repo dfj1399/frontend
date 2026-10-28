@@ -27,8 +27,8 @@
         <el-form-item label="用户名" prop="username">
           <el-input v-model="userForm.username" placeholder="请输入用户名" />
         </el-form-item>
-        <el-form-item label="密码" prop="password" v-if="!isEdit">
-          <el-input v-model="userForm.password" type="password" placeholder="请输入密码" show-password />
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="userForm.password" type="password" :placeholder="isEdit ? '留空则不修改密码' : '请输入密码'" show-password />
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="userForm.email" placeholder="请输入邮箱" />
@@ -100,7 +100,16 @@ const allowNumber = (v) => {
 
 const userRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  password: [{
+    validator: (rule, value, callback) => {
+      if (!isEdit.value && !value) {
+        callback(new Error('请输入密码'))
+      } else {
+        callback()
+      }
+    },
+    trigger: 'blur'
+  }],
   email: [{ type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }]
 }
 
@@ -151,7 +160,7 @@ const handleSubmit = async () => {
   submitLoading.value = true
   try {
     if (isEdit.value) {
-      await updateUser({ id: userForm.id, username: userForm.username, email: userForm.email, age: userForm.age, roleId: userForm.roleId })
+      await updateUser({ id: userForm.id, username: userForm.username, email: userForm.email, age: userForm.age, roleId: userForm.roleId, password: userForm.password })
       ElMessage.success('更新成功')
     } else {
       await addUser(userForm)

@@ -5,10 +5,10 @@
         <div class="card-header">
           <span>增值税发票台账</span>
           <div>
-            <el-select v-model="query.clientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
+            <el-select v-model="query.clientName" placeholder="选择客户" clearable filterable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
             </el-select>
-            <el-select v-model="query.projectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px">
+            <el-select v-model="query.projectId" placeholder="选择项目" clearable filterable style="width:220px;margin-right:8px">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
             <el-select v-model="query.owner" placeholder="选择负责人" clearable style="width:140px;margin-right:8px" @change="onOwnerChange">
@@ -23,28 +23,28 @@
         </div>
       </template>
 
-      <el-table :data="tableData" v-loading="loading" stripe size="small" border>
-        <el-table-column prop="projectCode" label="项目编号" width="100" fixed />
+      <el-table :data="tableData" v-loading="loading" stripe size="small" border show-summary :summary-method="getSummary">
+        <el-table-column prop="projectCode" label="项目编号" class-name="cell-nowrap" width="165" fixed />
         <el-table-column prop="projectName" label="项目名称" width="130" show-overflow-tooltip fixed />
         <el-table-column prop="clientName" label="客户名称" width="100" show-overflow-tooltip fixed />
-        <el-table-column prop="contractAmount" label="合同金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
+        <el-table-column prop="contractAmount" label="合同金额" width="130" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
 
         <el-table-column label="累计" align="center">
-          <el-table-column prop="totalInvoiceAmount" label="发票金额" width="100" align="right"><template #default="{ row }">{{ fmt(row.totalInvoiceAmount) }}</template></el-table-column>
-          <el-table-column prop="totalExTaxAmount" label="除税金额" width="100" align="right"><template #default="{ row }">{{ fmt(row.totalExTaxAmount) }}</template></el-table-column>
-          <el-table-column prop="totalTaxAmount" label="税额" width="100" align="right"><template #default="{ row }">{{ fmt(row.totalTaxAmount) }}</template></el-table-column>
+          <el-table-column prop="totalInvoiceAmount" label="发票金额" width="130" align="right"><template #default="{ row }">{{ fmt(row.totalInvoiceAmount) }}</template></el-table-column>
+          <el-table-column prop="totalExTaxAmount" label="除税金额" width="130" align="right"><template #default="{ row }">{{ fmt(row.totalExTaxAmount) }}</template></el-table-column>
+          <el-table-column prop="totalTaxAmount" label="税额" width="130" align="right"><template #default="{ row }">{{ fmt(row.totalTaxAmount) }}</template></el-table-column>
         </el-table-column>
 
         <el-table-column label="当年" align="center">
-          <el-table-column prop="yearInvoiceAmount" label="发票金额" width="100" align="right"><template #default="{ row }">{{ fmt(row.yearInvoiceAmount) }}</template></el-table-column>
-          <el-table-column prop="yearExTaxAmount" label="除税金额" width="100" align="right"><template #default="{ row }">{{ fmt(row.yearExTaxAmount) }}</template></el-table-column>
-          <el-table-column prop="yearTaxAmount" label="税额" width="100" align="right"><template #default="{ row }">{{ fmt(row.yearTaxAmount) }}</template></el-table-column>
+          <el-table-column prop="yearInvoiceAmount" label="发票金额" width="130" align="right"><template #default="{ row }">{{ fmt(row.yearInvoiceAmount) }}</template></el-table-column>
+          <el-table-column prop="yearExTaxAmount" label="除税金额" width="130" align="right"><template #default="{ row }">{{ fmt(row.yearExTaxAmount) }}</template></el-table-column>
+          <el-table-column prop="yearTaxAmount" label="税额" width="130" align="right"><template #default="{ row }">{{ fmt(row.yearTaxAmount) }}</template></el-table-column>
         </el-table-column>
 
         <el-table-column v-for="m in 12" :key="'m'+m" :label="m+'月'" align="center">
-          <el-table-column :prop="'m'+m+'Invoice'" label="发票金额" width="80" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'Invoice']) }}</template></el-table-column>
-          <el-table-column :prop="'m'+m+'ExTax'" label="除税金额" width="80" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'ExTax']) }}</template></el-table-column>
-          <el-table-column :prop="'m'+m+'Tax'" label="税额" width="80" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'Tax']) }}</template></el-table-column>
+          <el-table-column :prop="'m'+m+'Invoice'" label="发票金额" width="110" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'Invoice']) }}</template></el-table-column>
+          <el-table-column :prop="'m'+m+'ExTax'" label="除税金额" width="110" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'ExTax']) }}</template></el-table-column>
+          <el-table-column :prop="'m'+m+'Tax'" label="税额" width="110" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'Tax']) }}</template></el-table-column>
         </el-table-column>
       </el-table>
     </el-card>
@@ -72,6 +72,18 @@ const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 
 const tableData = ref([])
 
 const fmt = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
+
+const getSummary = ({ columns, data }) => {
+  const sumProps = ['contractAmount', 'totalInvoiceAmount', 'totalExTaxAmount', 'totalTaxAmount', 'yearInvoiceAmount', 'yearExTaxAmount', 'yearTaxAmount']
+  for (let m = 1; m <= 12; m++) sumProps.push('m' + m + 'Invoice', 'm' + m + 'ExTax', 'm' + m + 'Tax')
+  const sums = {}
+  sumProps.forEach(p => { sums[p] = data.reduce((a, r) => a + Number(r[p] || 0), 0) })
+  return columns.map((c, i) => {
+    if (i === 0) return '合计'
+    if (sums[c.property] !== undefined) return sums[c.property].toLocaleString('zh-CN', { minimumFractionDigits: 2 })
+    return ''
+  })
+}
 
 const onClientChange = () => {
   query.projectId = null

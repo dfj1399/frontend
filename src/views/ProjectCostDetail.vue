@@ -5,10 +5,10 @@
         <div class="card-header">
           <span>项目成本管理</span>
           <div>
-            <el-select v-model="selectedClientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
+            <el-select v-model="selectedClientName" placeholder="选择客户" clearable filterable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
             </el-select>
-            <el-select v-model="selectedProjectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px" @change="loadData">
+            <el-select v-model="selectedProjectId" placeholder="选择项目" clearable filterable style="width:220px;margin-right:8px" @change="loadData">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
             <el-button type="success" @click="importDialogVisible = true; selectedFile = null">导入Excel</el-button>
@@ -20,30 +20,30 @@
       </template>
 
       <el-table :data="list" v-loading="loading" stripe show-summary :summary-method="getSummary">
-        <el-table-column prop="projectCode" label="项目编号" width="120" />
-        <el-table-column prop="projectName" label="项目名称" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="clientName" label="客户名称" width="110" show-overflow-tooltip />
-        <el-table-column prop="contractAmount" label="合同金额" width="120" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
+        <el-table-column prop="projectCode" label="项目编号" class-name="cell-nowrap" width="165" fixed />
+        <el-table-column prop="projectName" label="项目名称" min-width="160" show-overflow-tooltip fixed />
+        <el-table-column prop="clientName" label="客户名称" width="110" show-overflow-tooltip fixed />
+        <el-table-column prop="contractAmount" label="合同金额" width="140" align="right"><template #default="{ row }">{{ fmt(row.contractAmount) }}</template></el-table-column>
         <el-table-column prop="recordDate" label="记录日期" width="110" />
-        <el-table-column prop="revenueWithTax" label="营业收入" width="120" align="right"><template #default="{ row }">{{ fmt(row.revenueWithTax) }}</template></el-table-column>
-        <el-table-column prop="revenueWithoutTax" label="营业收入（除税）" width="120" align="right"><template #default="{ row }">{{ fmt(row.revenueWithoutTax) }}</template></el-table-column>
-        <el-table-column prop="directMaterialCost" label="直接材料" width="110" align="right"><template #default="{ row }">{{ fmt(row.directMaterialCost) }}</template></el-table-column>
-        <el-table-column prop="directLaborCost" label="直接劳务" width="110" align="right"><template #default="{ row }">{{ fmt(row.directLaborCost) }}</template></el-table-column>
-        <el-table-column prop="directMachineryCost" label="直接机械" width="110" align="right"><template #default="{ row }">{{ fmt(row.directMachineryCost) }}</template></el-table-column>
-        <el-table-column prop="directExpense" label="直接费用" width="110" align="right"><template #default="{ row }">{{ fmt(row.directExpense) }}</template></el-table-column>
-        <el-table-column prop="indirectManagementFee" label="间接管理" width="110" align="right"><template #default="{ row }">{{ fmt(row.indirectManagementFee) }}</template></el-table-column>
-        <el-table-column prop="otherCost" label="其他" width="100" align="right"><template #default="{ row }">{{ fmt(row.otherCost) }}</template></el-table-column>
-        <el-table-column prop="costSubtotal" label="成本合计" width="110" align="right"><template #default="{ row }">{{ fmt(row.costSubtotal) }}</template></el-table-column>
-        <el-table-column prop="operatingProfit" label="营业利润" width="110" align="right"><template #default="{ row }">{{ fmt(row.operatingProfit) }}</template></el-table-column>
-        <el-table-column prop="inputTax" label="进项税" width="100" align="right"><template #default="{ row }">{{ fmt(row.inputTax) }}</template></el-table-column>
-        <el-table-column prop="periodManagementFee" label="期间管理" width="100" align="right"><template #default="{ row }">{{ fmt(row.periodManagementFee) }}</template></el-table-column>
-        <el-table-column prop="periodFinancialFee" label="期间财务" width="100" align="right"><template #default="{ row }">{{ fmt(row.periodFinancialFee) }}</template></el-table-column>
+        <el-table-column prop="revenueWithTax" label="营业收入" width="140" align="right"><template #default="{ row }">{{ fmt(row.revenueWithTax) }}</template></el-table-column>
+        <el-table-column prop="revenueWithoutTax" label="营业收入（除税）" width="140" align="right"><template #default="{ row }">{{ fmt(row.revenueWithoutTax) }}</template></el-table-column>
+        <el-table-column prop="directMaterialCost" label="直接材料" width="130" align="right"><template #default="{ row }">{{ fmt(row.directMaterialCost) }}</template></el-table-column>
+        <el-table-column prop="directLaborCost" label="直接劳务" width="130" align="right"><template #default="{ row }">{{ fmt(row.directLaborCost) }}</template></el-table-column>
+        <el-table-column prop="directMachineryCost" label="直接机械" width="130" align="right"><template #default="{ row }">{{ fmt(row.directMachineryCost) }}</template></el-table-column>
+        <el-table-column prop="directExpense" label="直接费用" width="130" align="right"><template #default="{ row }">{{ fmt(row.directExpense) }}</template></el-table-column>
+        <el-table-column prop="indirectManagementFee" label="间接管理" width="130" align="right"><template #default="{ row }">{{ fmt(row.indirectManagementFee) }}</template></el-table-column>
+        <el-table-column prop="otherCost" label="其他" width="130" align="right"><template #default="{ row }">{{ fmt(row.otherCost) }}</template></el-table-column>
+        <el-table-column prop="costSubtotal" label="成本合计" width="130" align="right"><template #default="{ row }">{{ fmt(row.costSubtotal) }}</template></el-table-column>
+        <el-table-column prop="operatingProfit" label="营业利润" width="130" align="right"><template #default="{ row }">{{ fmt(row.operatingProfit) }}</template></el-table-column>
+        <el-table-column prop="inputTax" label="进项税" width="130" align="right"><template #default="{ row }">{{ fmt(row.inputTax) }}</template></el-table-column>
+        <el-table-column prop="periodManagementFee" label="期间管理" width="130" align="right"><template #default="{ row }">{{ fmt(row.periodManagementFee) }}</template></el-table-column>
+        <el-table-column prop="periodFinancialFee" label="期间财务" width="130" align="right"><template #default="{ row }">{{ fmt(row.periodFinancialFee) }}</template></el-table-column>
         <el-table-column prop="projectCostAmount" label="项目成本支出(含税)" width="150" align="right"><template #default="{ row }">{{ fmt(row.projectCostAmount) }}</template></el-table-column>
-        <el-table-column prop="loanAmount" label="借款费用" width="100" align="right"><template #default="{ row }">{{ fmt(row.loanAmount) }}</template></el-table-column>
+        <el-table-column prop="loanAmount" label="借款费用" width="130" align="right"><template #default="{ row }">{{ fmt(row.loanAmount) }}</template></el-table-column>
         <el-table-column prop="projectLoanStatus" label="借款状态" width="100" align="center"><template #default="{ row }">{{ row.projectLoanStatus || '未借款' }}</template></el-table-column>
         <el-table-column prop="projectLoanClearTime" label="清算借款时间" width="130" align="center"><template #default="{ row }">{{ row.projectLoanClearTime ? String(row.projectLoanClearTime).replace('T', ' ').substring(0, 16) : '-' }}</template></el-table-column>
-        <el-table-column prop="grossMarginRate" label="毛利率(%)" width="100" align="right"><template #default="{ row }">{{ row.grossMarginRate != null ? Number(row.grossMarginRate).toFixed(2) + '%' : '-' }}</template></el-table-column>
-        <el-table-column prop="fundsOccupation" label="资金占用" width="100" align="right"><template #default="{ row }">{{ fmt(row.fundsOccupation) }}</template></el-table-column>
+        <el-table-column prop="grossMarginRate" label="毛利率(%)" width="110" align="right"><template #default="{ row }">{{ row.grossMarginRate != null ? Number(row.grossMarginRate).toFixed(2) + '%' : '-' }}</template></el-table-column>
+        <el-table-column prop="fundsOccupation" label="资金占用" width="130" align="right"><template #default="{ row }">{{ fmt(row.fundsOccupation) }}</template></el-table-column>
         <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
@@ -59,7 +59,7 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="所属项目" prop="projectId">
-              <el-select v-model="form.projectId" style="width:100%" placeholder="选择项目" @change="onProjectChange">
+              <el-select v-model="form.projectId" style="width:100%" filterable placeholder="选择项目" @change="onProjectChange">
                 <el-option v-for="p in projects" :key="p.id" :label="p.projectName" :value="p.id" />
               </el-select>
             </el-form-item>

@@ -5,10 +5,10 @@
         <div class="card-header">
           <span>项目结算回款</span>
           <div>
-            <el-select v-model="selectedClientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
+            <el-select v-model="selectedClientName" placeholder="选择客户" clearable filterable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
             </el-select>
-            <el-select v-model="selectedProjectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px" @change="loadGroupedData">
+            <el-select v-model="selectedProjectId" placeholder="选择项目" clearable filterable style="width:220px;margin-right:8px" @change="loadGroupedData">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
             <el-button type="success" v-if="hasPerm('payment:import')" @click="importDialogVisible = true; selectedFile = null">导入Excel</el-button>
@@ -20,24 +20,24 @@
       </template>
 
       <el-table :data="groupedList" v-loading="loading" stripe show-summary :summary-method="getSummary">
-        <el-table-column prop="projectCode" label="项目编号" width="110" show-overflow-tooltip />
-        <el-table-column prop="projectName" label="项目名称" width="140" show-overflow-tooltip>
+        <el-table-column prop="projectCode" label="项目编号" class-name="cell-nowrap" width="165" />
+        <el-table-column prop="projectName" label="项目名称" min-width="220" show-overflow-tooltip>
           <template #default="{ row }">
             <el-link v-if="hasPerm('payment:detail')" type="primary" @click="showHistory(row)">{{ row.projectName }}</el-link>
             <span v-else>{{ row.projectName }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="clientName" label="客户名称" width="100" show-overflow-tooltip />
-        <el-table-column prop="contractAmount" label="合同金额" width="120" align="right">
+        <el-table-column prop="clientName" label="客户名称" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="contractAmount" label="合同金额" width="140" align="right">
           <template #default="{ row }">{{ fmt(row.contractAmount) }}</template>
         </el-table-column>
-        <el-table-column prop="totalSettlement" label="累计结算" width="120" align="right">
+        <el-table-column prop="totalSettlement" label="累计结算" width="140" align="right">
           <template #default="{ row }">{{ fmt(row.totalSettlement) }}</template>
         </el-table-column>
-        <el-table-column prop="totalInvoice" label="累计开票" width="120" align="right">
+        <el-table-column prop="totalInvoice" label="累计开票" width="140" align="right">
           <template #default="{ row }">{{ fmt(row.totalInvoice) }}</template>
         </el-table-column>
-        <el-table-column prop="totalPayment" label="累计回款" width="120" align="right">
+        <el-table-column prop="totalPayment" label="累计回款" width="140" align="right">
           <template #default="{ row }">{{ fmt(row.totalPayment) }}</template>
         </el-table-column>
         <el-table-column label="操作" width="270" fixed="right">
@@ -65,10 +65,10 @@
           <el-table :data="selectedSettlementTaxDetails" size="small" border>
             <el-table-column prop="itemName" label="税目" width="100" />
             <el-table-column prop="taxRate" label="税率%" width="70" align="right" />
-            <el-table-column prop="settlementAmount" label="结算金额" width="100" align="right">
+            <el-table-column prop="settlementAmount" label="结算金额" width="110" align="right">
               <template #default="{ row }">{{ fmt(row.settlementAmount) }}</template>
             </el-table-column>
-            <el-table-column prop="invoiceAmount" label="发票金额" width="100" align="right">
+            <el-table-column prop="invoiceAmount" label="发票金额" width="110" align="right">
               <template #default="{ row }">{{ fmt(row.invoiceAmount) }}</template>
             </el-table-column>
           </el-table>
@@ -87,7 +87,7 @@
       <el-divider content-position="left">回款历史</el-divider>
       <el-table :data="paymentHistory" v-loading="paymentHistoryLoading" size="small" max-height="220" stripe style="margin-top:8px">
         <el-table-column prop="operationDate" label="日期" width="110" />
-        <el-table-column prop="amount" label="金额" width="120" align="right">
+        <el-table-column prop="amount" label="金额" width="140" align="right">
           <template #default="{ row }">{{ fmt(row.amount) }}</template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="120" show-overflow-tooltip />
@@ -133,7 +133,7 @@
               <el-input :model-value="row.invoiceAmount" @input="(v) => row.invoiceAmount = allowNumber(v)" placeholder="请输入数字" size="small" style="width:100%" />
             </template>
           </el-table-column>
-          <el-table-column label="税额" width="100" align="right">
+          <el-table-column label="税额" width="120" align="right">
             <template #default="{ row }">{{ calcSettlementTax(row) }}</template>
           </el-table-column>
         </el-table>
@@ -162,7 +162,7 @@
       <el-divider content-position="left">结算历史</el-divider>
       <el-table :data="settlementHistory" v-loading="settlementHistoryLoading" size="small" max-height="220" stripe style="margin-top:8px">
         <el-table-column prop="operationDate" label="日期" width="110" />
-        <el-table-column prop="amount" label="金额" width="120" align="right">
+        <el-table-column prop="amount" label="金额" width="140" align="right">
           <template #default="{ row }">{{ fmt(row.amount) }}</template>
         </el-table-column>
         <el-table-column label="结算单" width="160">
@@ -191,10 +191,10 @@
                 <el-table :data="row.taxDetails" size="small" stripe>
                   <el-table-column prop="itemName" label="税目" width="100" />
                   <el-table-column prop="taxRate" label="税率%" width="70" align="right" />
-                  <el-table-column prop="settlementAmount" label="结算金额" width="100" align="right">
+                  <el-table-column prop="settlementAmount" label="结算金额" width="110" align="right">
                     <template #default="{ row: d }">{{ fmt(d.settlementAmount) }}</template>
                   </el-table-column>
-                  <el-table-column prop="invoiceAmount" label="发票金额" width="100" align="right">
+                  <el-table-column prop="invoiceAmount" label="发票金额" width="110" align="right">
                     <template #default="{ row: d }">{{ fmt(d.invoiceAmount) }}</template>
                   </el-table-column>
                 </el-table>
@@ -224,16 +224,16 @@
       <el-table :data="invoiceableList" v-loading="invoiceableLoading" size="small" stripe>
         <el-table-column prop="itemName" label="税目" width="130" />
         <el-table-column prop="taxRate" label="税率%" width="70" align="right" />
-        <el-table-column prop="settlementAmount" label="结算金额" width="110" align="right">
+        <el-table-column prop="settlementAmount" label="结算金额" width="130" align="right">
           <template #default="{ row }">{{ fmt(row.settlementAmount) }}</template>
         </el-table-column>
-        <el-table-column prop="invoiceAmount" label="发票金额" width="110" align="right">
+        <el-table-column prop="invoiceAmount" label="发票金额" width="130" align="right">
           <template #default="{ row }">{{ fmt(row.invoiceAmount) }}</template>
         </el-table-column>
-        <el-table-column prop="issuedInvoiceAmount" label="已开发票额度" width="110" align="right">
+        <el-table-column prop="issuedInvoiceAmount" label="已开发票额度" width="130" align="right">
           <template #default="{ row }">{{ fmt(row.issuedInvoiceAmount) }}</template>
         </el-table-column>
-        <el-table-column label="可开票余额" width="120" align="right">
+        <el-table-column label="可开票余额" width="130" align="right">
           <template #default="{ row }">
             <span :style="{ color: canInvoiceRow(row) ? '#E6A23C' : '' }">
               {{ fmt(Number(row.invoiceAmount || 0) - Number(row.issuedInvoiceAmount || 0)) }}
@@ -249,7 +249,7 @@
       <el-divider content-position="left">开票历史</el-divider>
       <el-table :data="invoiceHistory" v-loading="invoiceHistoryLoading" size="small" max-height="220" stripe style="margin-top:8px">
         <el-table-column prop="operationDate" label="日期" width="110" />
-        <el-table-column prop="amount" label="金额" width="120" align="right">
+        <el-table-column prop="amount" label="金额" width="140" align="right">
           <template #default="{ row }">{{ fmt(row.amount) }}</template>
         </el-table-column>
         <el-table-column label="税率明细" min-width="180">
@@ -262,10 +262,10 @@
                 <el-table :data="row.taxDetails" size="small" stripe>
                   <el-table-column prop="itemName" label="税目" width="100" />
                   <el-table-column prop="taxRate" label="税率%" width="70" align="right" />
-                  <el-table-column prop="settlementAmount" label="结算金额" width="100" align="right">
+                  <el-table-column prop="settlementAmount" label="结算金额" width="110" align="right">
                     <template #default="{ row: d }">{{ fmt(d.settlementAmount) }}</template>
                   </el-table-column>
-                  <el-table-column prop="invoiceAmount" label="发票金额" width="100" align="right">
+                  <el-table-column prop="invoiceAmount" label="发票金额" width="110" align="right">
                     <template #default="{ row: d }">{{ fmt(d.invoiceAmount) }}</template>
                   </el-table-column>
                 </el-table>
@@ -320,7 +320,7 @@
             <el-tag :type="operationTagType(row.operationType)" size="small">{{ operationTypeLabelMap[row.operationType] }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="amount" label="金额" width="110" align="right">
+        <el-table-column prop="amount" label="金额" width="130" align="right">
           <template #default="{ row }">{{ fmt(row.amount) }}</template>
         </el-table-column>
         <el-table-column label="结算单" width="160">
@@ -348,13 +348,13 @@
                 <el-table :data="row.taxDetails" size="small" stripe>
                   <el-table-column prop="itemName" label="税目" width="100" />
                   <el-table-column prop="taxRate" label="税率%" width="70" align="right" />
-                  <el-table-column prop="settlementAmount" label="结算金额" width="100" align="right">
+                  <el-table-column prop="settlementAmount" label="结算金额" width="110" align="right">
                     <template #default="{ row: d }">{{ fmt(d.settlementAmount) }}</template>
                   </el-table-column>
-                  <el-table-column prop="invoiceAmount" label="发票金额" width="100" align="right">
+                  <el-table-column prop="invoiceAmount" label="发票金额" width="110" align="right">
                     <template #default="{ row: d }">{{ fmt(d.invoiceAmount) }}</template>
                   </el-table-column>
-                  <el-table-column prop="issuedInvoiceAmount" label="已开发票额度" width="100" align="right">
+                  <el-table-column prop="issuedInvoiceAmount" label="已开发票额度" width="130" align="right">
                     <template #default="{ row: d }">{{ fmt(d.issuedInvoiceAmount) }}</template>
                   </el-table-column>
                 </el-table>

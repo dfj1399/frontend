@@ -28,36 +28,36 @@
           <el-icon><DataAnalysis /></el-icon>
           <span>项目结算回款</span>
         </el-menu-item>
-        <el-sub-menu index="/reports">
+        <el-sub-menu index="/reports" v-if="hasAnyReportView()">
           <template #title>
             <el-icon><Document /></el-icon>
             <span>项目报表</span>
           </template>
-          <el-menu-item index="/reports/receivable">
+          <el-menu-item index="/reports/receivable" v-if="hasPerm('report:receivable-view')">
             <el-icon><CreditCard /></el-icon>
             <span>应收债权</span>
           </el-menu-item>
-          <el-menu-item index="/reports/payment-month">
+          <el-menu-item index="/reports/payment-month" v-if="hasPerm('report:payment-month-view')">
             <el-icon><Tickets /></el-icon>
             <span>项目结算发票报表</span>
           </el-menu-item>
-          <el-menu-item index="/reports/input-tax">
+          <el-menu-item index="/reports/input-tax" v-if="hasPerm('report:input-tax-view')">
             <el-icon><Coin /></el-icon>
             <span>进项税额统计</span>
           </el-menu-item>
-          <el-menu-item index="/reports/cash-flow">
+          <el-menu-item index="/reports/cash-flow" v-if="hasPerm('report:cash-flow-view')">
             <el-icon><Notebook /></el-icon>
             <span>收付实现制台账</span>
           </el-menu-item>
-          <el-menu-item index="/reports/profit">
+          <el-menu-item index="/reports/profit" v-if="hasPerm('report:profit-view')">
             <el-icon><PieChart /></el-icon>
             <span>项目损益汇总表</span>
           </el-menu-item>
-          <el-menu-item index="/reports/vat-invoice-ledger">
+          <el-menu-item index="/reports/vat-invoice-ledger" v-if="hasPerm('report:vat-view')">
             <el-icon><Tickets /></el-icon>
             <span>增值税发票台账</span>
           </el-menu-item>
-          <el-menu-item index="/reports/project-ledger">
+          <el-menu-item index="/reports/project-ledger" v-if="hasPerm('report:ledger-view')">
             <el-icon><DocumentCopy /></el-icon>
             <span>项目台账</span>
           </el-menu-item>
@@ -120,6 +120,12 @@ const router = useRouter()
 const currentUser = JSON.parse(sessionStorage.getItem('user') || '{}')
 
 const hasPerm = (code) => permissionStore.has(code)
+// 任一报表查看权限即可显示报表菜单分组
+const reportViewCodes = [
+  'report:receivable-view', 'report:payment-month-view', 'report:input-tax-view',
+  'report:cash-flow-view', 'report:profit-view', 'report:vat-view', 'report:ledger-view'
+]
+const hasAnyReportView = () => reportViewCodes.some((code) => permissionStore.has(code))
 
 const activeMenu = computed(() => {
   return '/' + route.path.split('/')[1]

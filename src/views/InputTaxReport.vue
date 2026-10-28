@@ -5,10 +5,10 @@
         <div class="card-header">
           <span>进项税额统计</span>
           <div>
-            <el-select v-model="query.clientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
+            <el-select v-model="query.clientName" placeholder="选择客户" clearable filterable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
             </el-select>
-            <el-select v-model="query.projectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px">
+            <el-select v-model="query.projectId" placeholder="选择项目" clearable filterable style="width:220px;margin-right:8px">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
             <el-select v-model="query.owner" placeholder="选择负责人" clearable style="width:140px;margin-right:8px" @change="onOwnerChange">
@@ -18,18 +18,18 @@
               <el-option v-for="y in years" :key="y" :label="y + '年'" :value="y" />
             </el-select>
             <el-button type="primary" @click="loadData" :loading="loading">查询</el-button>
-            <el-button @click="handleExport" :loading="exporting">导出</el-button>
+            <el-button @click="handleExport" :loading="exporting" v-if="permissionStore.has('report:input-tax-export')">导出</el-button>
           </div>
         </div>
       </template>
 
       <el-table :data="tableData" v-loading="loading" stripe show-summary :summary-method="getSummary" size="small">
-        <el-table-column prop="projectCode" label="项目编号" width="110" />
+        <el-table-column prop="projectCode" label="项目编号" class-name="cell-nowrap" width="165" />
         <el-table-column prop="projectName" label="项目名称" min-width="150" show-overflow-tooltip />
         <el-table-column prop="clientName" label="客户名称" width="110" show-overflow-tooltip />
-        <el-table-column prop="cumulativeTax" label="累计金额" width="110" align="right"><template #default="{ row }">{{ fmt(row.cumulativeTax) }}</template></el-table-column>
-        <el-table-column v-for="m in 12" :key="'it'+m" :prop="'m'+m+'Tax'" :label="m+'月'" width="100" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'Tax']) }}</template></el-table-column>
-        <el-table-column prop="yearTax" label="本年累计" width="120" align="right"><template #default="{ row }">{{ fmt(row.yearTax) }}</template></el-table-column>
+        <el-table-column prop="cumulativeTax" label="累计金额" width="130" align="right"><template #default="{ row }">{{ fmt(row.cumulativeTax) }}</template></el-table-column>
+        <el-table-column v-for="m in 12" :key="'it'+m" :prop="'m'+m+'Tax'" :label="m+'月'" width="110" align="right"><template #default="{ row }">{{ fmt(row['m'+m+'Tax']) }}</template></el-table-column>
+        <el-table-column prop="yearTax" label="本年累计" width="130" align="right"><template #default="{ row }">{{ fmt(row.yearTax) }}</template></el-table-column>
       </el-table>
     </el-card>
   </div>
@@ -38,7 +38,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getProjects, getClients, getProjectOwners, getInputTaxReport, exportInputTaxReport } from '../api'
+import { getProjects, getClients, getProjectOwners, getInputTaxReport, exportInputTaxReport, permissionStore } from '../api'
 
 const loading = ref(false)
 const exporting = ref(false)

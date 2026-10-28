@@ -5,10 +5,10 @@
         <div class="card-header">
           <span>项目合同管理</span>
           <div>
-            <el-select v-model="selectedClientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
+            <el-select v-model="selectedClientName" placeholder="选择客户" clearable filterable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
             </el-select>
-            <el-select v-model="selectedProjectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px" @change="loadData">
+            <el-select v-model="selectedProjectId" placeholder="选择项目" clearable filterable style="width:220px;margin-right:8px" @change="loadData">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
             <el-button type="success" @click="openImportDialog" v-if="hasPerm('project:import')">导入Excel</el-button>
@@ -16,22 +16,22 @@
           <el-button type="primary" @click="handleAdd" v-if="hasPerm('project:create')">新增项目</el-button></div>
         </div>
       </template>
-      <el-table :data="filteredList" v-loading="loading" stripe>
-        <el-table-column prop="projectCode" label="项目编号" width="120" />
+      <el-table :data="filteredList" v-loading="loading" stripe show-summary :summary-method="getSummary">
+        <el-table-column prop="projectCode" label="项目编号" width="165" class-name="cell-nowrap" />
         <el-table-column prop="projectName" label="项目名称" width="200" show-overflow-tooltip />
         <el-table-column prop="clientName" label="客户名称" width="120" show-overflow-tooltip />
-        <el-table-column prop="contractNo" label="合同编号" width="120" />
+        <el-table-column prop="contractNo" label="合同编号" width="165" class-name="cell-nowrap" />
         <el-table-column prop="signingDate" label="合同签订日期" width="120">
           <template #default="{ row }">{{ row.signingDate || row.startDate || '-' }}</template>
         </el-table-column>
-        <el-table-column prop="contractAmount" label="合同金额" width="120" align="right">
+        <el-table-column prop="contractAmount" label="合同金额" width="140" align="right">
           <template #default="{ row }">{{ formatMoney(row.contractAmount) }}</template>
         </el-table-column>
-        <el-table-column prop="revenueWithTax" label="结算收入" width="130" align="right">
+        <el-table-column prop="revenueWithTax" label="结算收入" width="140" align="right">
           <template #default="{ row }">{{ formatMoney(row.revenueWithTax) }}</template>
         </el-table-column>
-        <el-table-column prop="revenueWithoutTax" label="开票总额" width="130" align="right">
-          <template #default="{ row }">{{ formatMoney(row.revenueWithoutTax) }}</template>
+        <el-table-column prop="totalInvoiceAmount" label="开票总额" width="140" align="right">
+          <template #default="{ row }">{{ formatMoney(row.totalInvoiceAmount) }}</template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
@@ -103,7 +103,7 @@
             <el-form-item label="结算收入"><el-input :model-value="formatMoney(form.revenueWithTax)" disabled style="width:100%" /></el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="开票总额"><el-input :model-value="formatMoney(form.revenueWithoutTax)" disabled style="width:100%" /></el-form-item>
+            <el-form-item label="开票总额"><el-input :model-value="formatMoney(form.totalInvoiceAmount)" disabled style="width:100%" /></el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
@@ -239,7 +239,7 @@ const onClientChange = () => {
 const form = reactive({
   id: null, projectCode: '', projectName: '', clientName: '', contractNo: '',
   contractAmount: 0, settlementAmount: 0, deposit: 0, depositPeriod: '', depositMaturityDate: '',
-  totalBudget: 0, estimatedCost: 0, handlingFeeRate: 0, revenueWithTax: 0, revenueWithoutTax: 0,
+  totalBudget: 0, estimatedCost: 0, handlingFeeRate: 0, revenueWithTax: 0, revenueWithoutTax: 0, totalInvoiceAmount: 0,
   status: 'IN_PROGRESS', owner: '', startDate: '', endDate: '',
   actualEndDate: '', remark: ''
 })
@@ -353,6 +353,15 @@ const saveTaxDetails = async () => {
 }
 
 const formatMoney = (v) => v != null ? Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) : '-'
+const getSummary = ({ columns, data }) => {
+  const sums = []; columns.forEach((c, i) => {
+    if (i === 0) { sums[i] = '合计'; return }
+    if (['contractAmount', 'revenueWithTax', 'totalInvoiceAmount'].includes(c.property)) {
+      const v = data.reduce((a, r) => a + Number(r[c.property] || 0), 0)
+      sums[i] = v.toLocaleString('zh-CN', { minimumFractionDigits: 2 })
+    } else sums[i] = ''
+  }); return sums
+}
 const statusLabel = (s) => ({ IN_PROGRESS: '进行中', COMPLETED: '已完成', SUSPENDED: '暂停', CANCELLED: '取消' }[s] || s)
 const statusTag = (s) => ({ IN_PROGRESS: '', COMPLETED: 'success', SUSPENDED: 'warning', CANCELLED: 'danger' }[s] || '')
 
@@ -370,7 +379,7 @@ const loadData = async () => {
 }
 
 const resetForm = () => {
-  Object.assign(form, { id: null, projectCode: '', projectName: '', clientName: '', contractNo: '', contractAmount: 0, settlementAmount: 0, deposit: 0, depositPeriod: '', depositMaturityDate: '', totalBudget: 0, estimatedCost: 0, handlingFeeRate: 0, revenueWithTax: 0, revenueWithoutTax: 0, status: 'IN_PROGRESS', owner: '', startDate: '', endDate: '', actualEndDate: '', remark: '' })
+  Object.assign(form, { id: null, projectCode: '', projectName: '', clientName: '', contractNo: '', contractAmount: 0, settlementAmount: 0, deposit: 0, depositPeriod: '', depositMaturityDate: '', totalBudget: 0, estimatedCost: 0, handlingFeeRate: 0, revenueWithTax: 0, revenueWithoutTax: 0, totalInvoiceAmount: 0, status: 'IN_PROGRESS', owner: '', startDate: '', endDate: '', actualEndDate: '', remark: '' })
   taxDetails.value = []
 }
 
@@ -549,4 +558,6 @@ onMounted(async () => {
 .template-download-link:hover {
   color: var(--el-color-primary-light-3);
 }
+
+:deep(.cell-nowrap .cell) { white-space: nowrap; }
 </style>

@@ -5,10 +5,10 @@
         <div class="card-header">
           <span>应收债权</span>
           <div>
-            <el-select v-model="query.clientName" placeholder="选择客户" clearable style="width:180px;margin-right:8px" @change="onClientChange">
+            <el-select v-model="query.clientName" placeholder="选择客户" clearable filterable style="width:180px;margin-right:8px" @change="onClientChange">
               <el-option v-for="c in clients" :key="c.clientName" :label="c.clientName" :value="c.clientName" />
             </el-select>
-            <el-select v-model="query.projectId" placeholder="选择项目" clearable style="width:220px;margin-right:8px">
+            <el-select v-model="query.projectId" placeholder="选择项目" clearable filterable style="width:220px;margin-right:8px">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
             <el-select v-model="query.owner" placeholder="选择负责人" clearable style="width:140px;margin-right:8px" @change="onOwnerChange">
@@ -21,22 +21,22 @@
               <el-option v-for="m in 12" :key="m" :label="m + '月'" :value="m" />
             </el-select>
             <el-button type="primary" @click="loadData" :loading="loading">查询</el-button>
-            <el-button @click="handleExport" :loading="exporting">导出</el-button>
+            <el-button @click="handleExport" :loading="exporting" v-if="permissionStore.has('report:receivable-export')">导出</el-button>
           </div>
         </div>
       </template>
 
       <el-table :data="tableData" v-loading="loading" stripe show-summary :summary-method="getSummary" size="small">
-        <el-table-column prop="projectCode" label="项目编号" width="110" />
+        <el-table-column prop="projectCode" label="项目编号" class-name="cell-nowrap" width="165" />
         <el-table-column prop="projectName" label="项目名称" min-width="140" show-overflow-tooltip />
         <el-table-column prop="clientName" label="客户名称" width="110" show-overflow-tooltip />
-        <el-table-column prop="settlementAmount" label="结算金额" width="120" align="right"><template #default="{ row }">{{ fmt(row.settlementAmount) }}</template></el-table-column>
-        <el-table-column prop="invoicedAmount" label="已开发票" width="120" align="right"><template #default="{ row }">{{ fmt(row.invoicedAmount) }}</template></el-table-column>
-        <el-table-column prop="receivedAmount" label="已回款" width="120" align="right"><template #default="{ row }">{{ fmt(row.receivedAmount) }}</template></el-table-column>
-        <el-table-column prop="settledNotInvoiced" label="已结算未开" width="120" align="right"><template #default="{ row }">{{ fmt(row.settledNotInvoiced) }}</template></el-table-column>
-        <el-table-column prop="invoicedNotReceived" label="已票未收款" width="120" align="right"><template #default="{ row }">{{ fmt(row.invoicedNotReceived) }}</template></el-table-column>
-        <el-table-column prop="subtotal" label="小计" width="120" align="right"><template #default="{ row }">{{ fmt(row.subtotal) }}</template></el-table-column>
-        <el-table-column prop="deposit" label="质保金" width="110" align="right"><template #default="{ row }">{{ fmt(row.deposit) }}</template></el-table-column>
+        <el-table-column prop="settlementAmount" label="结算金额" width="130" align="right"><template #default="{ row }">{{ fmt(row.settlementAmount) }}</template></el-table-column>
+        <el-table-column prop="invoicedAmount" label="已开发票" width="130" align="right"><template #default="{ row }">{{ fmt(row.invoicedAmount) }}</template></el-table-column>
+        <el-table-column prop="receivedAmount" label="已回款" width="130" align="right"><template #default="{ row }">{{ fmt(row.receivedAmount) }}</template></el-table-column>
+        <el-table-column prop="settledNotInvoiced" label="已结算未开" width="130" align="right"><template #default="{ row }">{{ fmt(row.settledNotInvoiced) }}</template></el-table-column>
+        <el-table-column prop="invoicedNotReceived" label="已票未收款" width="130" align="right"><template #default="{ row }">{{ fmt(row.invoicedNotReceived) }}</template></el-table-column>
+        <el-table-column prop="subtotal" label="小计" width="130" align="right"><template #default="{ row }">{{ fmt(row.subtotal) }}</template></el-table-column>
+        <el-table-column prop="deposit" label="质保金" width="130" align="right"><template #default="{ row }">{{ fmt(row.deposit) }}</template></el-table-column>
         <el-table-column prop="depositPeriod" label="期限" width="120">
           <template #default="{ row }">
             <span :style="isUrgent(row.depositPeriod) ? 'color:red;font-weight:bold' : ''">{{ row.depositPeriod }}</span>
@@ -51,7 +51,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getProjects, getClients, getProjectOwners, getReceivableReport, exportReceivableReport } from '../api'
+import { getProjects, getClients, getProjectOwners, getReceivableReport, exportReceivableReport, permissionStore } from '../api'
 
 const loading = ref(false)
 const exporting = ref(false)

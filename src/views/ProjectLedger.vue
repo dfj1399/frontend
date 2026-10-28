@@ -5,12 +5,12 @@
         <div class="card-header">
           <span>项目台账</span>
           <div>
-            <el-select v-model="query.projectId" placeholder="选择项目" clearable style="width:240px;margin-right:8px">
+            <el-select v-model="query.projectId" placeholder="选择项目" clearable filterable style="width:240px;margin-right:8px">
               <el-option v-for="p in projects" :key="p.id" :label="p.projectName + ' (' + p.projectCode + ')'" :value="p.id" />
             </el-select>
             <el-date-picker v-model="query.year" type="year" format="YYYY" value-format="YYYY" placeholder="选择年份" clearable style="width:130px;margin-right:8px" />
             <el-button type="primary" @click="loadData" :loading="loading">查询</el-button>
-            <el-button @click="handleExport" :loading="exporting">导出</el-button>
+            <el-button @click="handleExport" :loading="exporting" v-if="permissionStore.has('report:ledger-export')">导出</el-button>
           </div>
         </div>
       </template>
@@ -38,18 +38,18 @@
             <span :class="getItemClass(row.rowNo)">{{ row.itemName }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="budgetAmount" label="合同预算" width="110" align="right" fixed>
+        <el-table-column prop="budgetAmount" label="合同预算" width="130" align="right" fixed>
           <template #default="{ row }">{{ fmtCell(row, row.budgetAmount) }}</template>
         </el-table-column>
 
         <el-table-column label="以前年度情况" align="center">
-          <el-table-column prop="priorTotal" label="以前年度" width="100" align="right">
+          <el-table-column prop="priorTotal" label="以前年度" width="130" align="right">
             <template #default="{ row }">{{ fmtCell(row, row.priorTotal) }}</template>
           </el-table-column>
-          <el-table-column prop="priorPriorYear" label="上上年" width="100" align="right">
+          <el-table-column prop="priorPriorYear" label="上上年" width="130" align="right">
             <template #default="{ row }">{{ fmtCell(row, row.priorPriorYear) }}</template>
           </el-table-column>
-          <el-table-column prop="priorYear" label="上年" width="100" align="right">
+          <el-table-column prop="priorYear" label="上年" width="130" align="right">
             <template #default="{ row }">{{ fmtCell(row, row.priorYear) }}</template>
           </el-table-column>
           <el-table-column prop="priorSum" label="以前年度情况合计" width="130" align="right">
@@ -58,15 +58,15 @@
         </el-table-column>
 
         <el-table-column :label="query.year + '年'" align="center">
-          <el-table-column v-for="m in 12" :key="'m'+m" :prop="'m'+m" :label="m+'月'" width="90" align="right">
+          <el-table-column v-for="m in 12" :key="'m'+m" :prop="'m'+m" :label="m+'月'" width="110" align="right">
             <template #default="{ row }">{{ fmtCell(row, row['m'+m]) }}</template>
           </el-table-column>
         </el-table-column>
 
-        <el-table-column prop="yearTotal" label="本年累计" width="110" align="right">
+        <el-table-column prop="yearTotal" label="本年累计" width="130" align="right">
           <template #default="{ row }">{{ fmtCell(row, row.yearTotal) }}</template>
         </el-table-column>
-        <el-table-column prop="cumulativeTotal" label="累计完成" width="110" align="right">
+        <el-table-column prop="cumulativeTotal" label="累计完成" width="130" align="right">
           <template #default="{ row }">{{ fmtCell(row, row.cumulativeTotal) }}</template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="120" show-overflow-tooltip />
@@ -80,7 +80,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getProjects, getProjectLedgerReport, exportProjectLedgerReport } from '../api'
+import { getProjects, getProjectLedgerReport, exportProjectLedgerReport, permissionStore } from '../api'
 
 const loading = ref(false)
 const exporting = ref(false)
