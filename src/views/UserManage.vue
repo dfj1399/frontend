@@ -8,7 +8,7 @@
         </div>
       </template>
 
-      <el-table :data="userList" v-loading="loading" stripe style="width: 100%">
+      <el-table :data="pagedList" v-loading="loading" stripe style="width: 100%" class="list-table" max-height="calc(100vh - 320px)">
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="username" label="用户名" />
         <el-table-column prop="email" label="邮箱" />
@@ -20,6 +20,8 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <TablePagination :total="total" v-model:page="page" v-model:size="size" />
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
@@ -52,6 +54,8 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import TablePagination from '../components/TablePagination.vue'
+import { usePagination } from '../composables/usePagination'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getUsers, addUser, updateUser, deleteUser, getRoles, permissionStore } from '../api'
 
@@ -62,6 +66,7 @@ const dialogTitle = ref('新增用户')
 const isEdit = ref(false)
 const userFormRef = ref(null)
 const userList = ref([])
+const { page, size, total, pagedList } = usePagination(userList)
 
 const roles = ref([])
 const userForm = reactive({

@@ -11,7 +11,7 @@
               <el-button type="primary" @click="handleAddExpense" v-if="hasPerm('config:expense:create')">新增支出项目</el-button></div>
             </div>
           </template>
-          <el-table :data="expenseList" v-loading="expLoading" stripe>
+          <el-table :data="expPagedList" v-loading="expLoading" stripe class="list-table" max-height="calc(100vh - 320px)">
             <el-table-column prop="itemCode" label="编码" width="120" />
             <el-table-column prop="itemName" label="项目名称" width="150" />
             <el-table-column prop="category" label="分类" width="120">
@@ -30,6 +30,8 @@
               </template>
             </el-table-column>
           </el-table>
+
+          <TablePagination :total="expTotal" v-model:page="expPage" v-model:size="expSize" />
         </el-card>
       </el-tab-pane>
 
@@ -43,7 +45,7 @@
               <el-button type="primary" @click="handleAddVat" v-if="hasPerm('config:vat:create')">新增增值税项目</el-button></div>
             </div>
           </template>
-          <el-table :data="vatList" v-loading="vatLoading" stripe>
+          <el-table :data="vatPagedList" v-loading="vatLoading" stripe class="list-table" max-height="calc(100vh - 320px)">
             <el-table-column prop="taxRate" label="税率%" width="100" align="right" />
             <el-table-column prop="itemName" label="税目名称" width="150" />
             <el-table-column prop="taxMethod" label="计税方式" width="120">
@@ -63,6 +65,8 @@
               </template>
             </el-table-column>
           </el-table>
+
+          <TablePagination :total="vatTotal" v-model:page="vatPage" v-model:size="vatSize" />
         </el-card>
       </el-tab-pane>
     </el-tabs>
@@ -170,6 +174,8 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import TablePagination from '../components/TablePagination.vue'
+import { usePagination } from '../composables/usePagination'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getExpenseItems, addExpenseItem, updateExpenseItem, deleteExpenseItem, getVatItems, addVatItem, updateVatItem, deleteVatItem, importExpenseItems, importVatItems, permissionStore, downloadTemplate } from '../api'
 import { Upload, Download } from '@element-plus/icons-vue'
@@ -205,6 +211,7 @@ const allowNumber = (v) => {
 // === 支出项目 ===
 const expLoading = ref(false); const expSubmitting = ref(false); const expDialogVisible = ref(false); const expIsEdit = ref(false)
 const expFormRef = ref(null); const expenseList = ref([])
+const { page: expPage, size: expSize, total: expTotal, pagedList: expPagedList } = usePagination(expenseList)
 const expForm = reactive({ id: null, itemCode: '', itemName: '', category: '', costAccount: '', taxRate: 0, isActive: 1, sortOrder: 0, remark: '' })
 
 const loadExpenseItems = async () => { expLoading.value = true; try { const { data } = await getExpenseItems(); expenseList.value = data.data || [] } catch {} finally { expLoading.value = false } }
@@ -217,6 +224,7 @@ const handleDeleteExpense = (row) => { ElMessageBox.confirm('确定删除？', '
 // === 增值税项目 ===
 const vatLoading = ref(false); const vatSubmitting = ref(false); const vatDialogVisible = ref(false); const vatIsEdit = ref(false)
 const vatFormRef = ref(null); const vatList = ref([])
+const { page: vatPage, size: vatSize, total: vatTotal, pagedList: vatPagedList } = usePagination(vatList)
 const vatForm = reactive({ id: null, taxRate: 0, itemName: '', taxMethod: 'GENERAL', isDeductible: 1, accountCode: '', isActive: 1, sortOrder: 0, remark: '' })
 
 const loadVatItems = async () => { vatLoading.value = true; try { const { data } = await getVatItems(); vatList.value = data.data || [] } catch {} finally { vatLoading.value = false } }

@@ -19,7 +19,7 @@
         </div>
       </template>
 
-      <el-table :data="list" v-loading="loading" stripe show-summary :summary-method="getSummary">
+      <el-table :data="pagedList" v-loading="loading" stripe show-summary :summary-method="getSummary" class="list-table" max-height="calc(100vh - 320px)">
         <el-table-column prop="projectCode" label="项目编号" class-name="cell-nowrap" width="165" fixed />
         <el-table-column prop="projectName" label="项目名称" min-width="160" show-overflow-tooltip fixed />
         <el-table-column prop="clientName" label="客户名称" width="110" show-overflow-tooltip fixed />
@@ -52,6 +52,8 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <TablePagination :total="total" v-model:page="page" v-model:size="size" />
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑成本' : '新增成本'" width="900px">
@@ -143,12 +145,15 @@
 
 <script setup>
 import { ref, reactive, onMounted, watch, computed } from 'vue'
+import TablePagination from '../components/TablePagination.vue'
+import { usePagination } from '../composables/usePagination'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getProjects, getClients, getProjectCosts, getProjectCostsByProject, addProjectCost, updateProjectCost, deleteProjectCost, importProjectCosts, exportProjectCosts, downloadTemplate } from '../api'
 import { Upload, Download } from '@element-plus/icons-vue'
 
 const loading = ref(false); const submitLoading = ref(false); const dialogVisible = ref(false); const isEdit = ref(false)
 const formRef = ref(null); const list = ref([])
+const { page, size, total, pagedList } = usePagination(list)
 const allProjects = ref([])
 const clients = ref([])
 const selectedProjectId = ref(null)

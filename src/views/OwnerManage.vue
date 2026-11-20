@@ -7,7 +7,7 @@
           <el-button type="primary" @click="handleAdd" v-if="hasPerm('owner:create')">新增负责人</el-button>
         </div>
       </template>
-      <el-table :data="list" v-loading="loading" stripe>
+      <el-table :data="pagedList" v-loading="loading" stripe class="list-table" max-height="calc(100vh - 320px)">
         <el-table-column prop="ownerName" label="负责人姓名" min-width="160" />
         <el-table-column prop="phone" label="联系电话" width="150" />
         <el-table-column prop="remark" label="备注" min-width="200" show-overflow-tooltip />
@@ -18,6 +18,8 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <TablePagination :total="total" v-model:page="page" v-model:size="size" />
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑负责人' : '新增负责人'" width="500px">
@@ -42,6 +44,8 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import TablePagination from '../components/TablePagination.vue'
+import { usePagination } from '../composables/usePagination'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getProjectOwners, addProjectOwner, updateProjectOwner, deleteProjectOwner, permissionStore } from '../api'
 
@@ -51,6 +55,7 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref(null)
 const list = ref([])
+const { page, size, total, pagedList } = usePagination(list)
 
 const form = reactive({ id: null, ownerName: '', phone: '', remark: '' })
 

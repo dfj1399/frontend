@@ -24,7 +24,7 @@
         </el-form-item>
       </el-form>
 
-      <el-table :data="list" v-loading="loading" stripe>
+      <el-table :data="list" v-loading="loading" stripe class="list-table" max-height="calc(100vh - 320px)">
         <el-table-column prop="username" label="操作人" width="100" />
         <el-table-column prop="module" label="模块" width="100" />
         <el-table-column prop="operationType" label="操作类型" width="100" />
@@ -36,16 +36,14 @@
         </el-table-column>
       </el-table>
 
-      <el-pagination
-        v-model:current-page="page" v-model:page-size="pageSize" :total="total"
-        layout="total, sizes, prev, pager, next" :page-sizes="[10,20,50,100]"
-        style="margin-top:16px;justify-content:flex-end" @change="search" />
+      <TablePagination :total="total" v-model:page="page" v-model:size="pageSize" @change="onPaginationChange" />
     </el-card>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import TablePagination from '../components/TablePagination.vue'
 import { getOperationLogs, getLogModules, getLogTypes } from '../api'
 
 const loading = ref(false)
@@ -53,7 +51,7 @@ const list = ref([])
 const modules = ref([])
 const types = ref([])
 const page = ref(1)
-const pageSize = ref(20)
+const pageSize = ref(10)
 const total = ref(0)
 
 const filters = reactive({ dateRange: null, module: '', operationType: '' })
@@ -68,7 +66,7 @@ const onModuleChange = async (m) => {
 const search = async () => {
   loading.value = true
   try {
-    const params = { page: page.value, pageSize: pageSize.value }
+    const params = { page: page.value, pageSize: pageSize.value === 'all' ? 100000 : pageSize.value }
     if (filters.module) params.module = filters.module
     if (filters.operationType) params.operationType = filters.operationType
     if (filters.dateRange) {
@@ -80,6 +78,11 @@ const search = async () => {
     total.value = data.total || 0
   } catch {}
   finally { loading.value = false }
+}
+const onPaginationChange = ({ page: p, size: s }) => {
+  page.value = p
+  pageSize.value = s
+  search()
 }
 const reset = () => { filters.dateRange = null; filters.module = ''; filters.operationType = ''; types.value = []; search() }
 

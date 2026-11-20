@@ -20,4 +20,5 @@ body {
 .el-table .cell-nowrap .cell {
   white-space: nowrap;
 }
+
 </style>

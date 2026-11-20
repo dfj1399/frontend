@@ -16,7 +16,7 @@
           <el-button type="primary" @click="handleAdd" v-if="hasPerm('project:create')">新增项目</el-button></div>
         </div>
       </template>
-      <el-table :data="filteredList" v-loading="loading" stripe show-summary :summary-method="getSummary">
+      <el-table :data="pagedList" v-loading="loading" stripe show-summary :summary-method="getSummary" class="list-table" max-height="calc(100vh - 320px)">
         <el-table-column prop="projectCode" label="项目编号" width="165" class-name="cell-nowrap" />
         <el-table-column prop="projectName" label="项目名称" width="200" show-overflow-tooltip />
         <el-table-column prop="clientName" label="客户名称" width="120" show-overflow-tooltip />
@@ -46,6 +46,8 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <TablePagination :total="total" v-model:page="page" v-model:size="size" />
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑项目合同' : '新增项目合同'" width="850px">
@@ -204,6 +206,8 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
+import TablePagination from '../components/TablePagination.vue'
+import { usePagination } from '../composables/usePagination'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getProjects, addProject, updateProject, deleteProject, importProjects, exportProjects, getProjectRevenueTax, saveProjectRevenueTax, getActiveVatItems, getBudgetSumCostSubtotal, getClients, getProjectOwners, permissionStore, downloadTemplate } from '../api'
 import { Upload, Download } from '@element-plus/icons-vue'
@@ -230,6 +234,7 @@ const filteredList = computed(() => {
   if (!selectedProjectId.value) return list.value
   return list.value.filter(p => p.id === selectedProjectId.value)
 })
+const { page, size, total, pagedList } = usePagination(filteredList)
 
 const onClientChange = () => {
   selectedProjectId.value = null

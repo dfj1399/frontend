@@ -10,7 +10,7 @@
         </div>
       </template>
 
-      <el-table :data="backupList" v-loading="loading" stripe>
+      <el-table :data="pagedList" v-loading="loading" stripe class="list-table" max-height="calc(100vh - 320px)">
         <el-table-column prop="fileName" label="文件名" min-width="220" />
         <el-table-column label="文件大小" width="120" align="right">
           <template #default="{ row }">{{ formatSize(row.size) }}</template>
@@ -26,12 +26,16 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <TablePagination :total="total" v-model:page="page" v-model:size="size" />
     </el-card>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import TablePagination from '../components/TablePagination.vue'
+import { usePagination } from '../composables/usePagination'
 import { ElMessage } from 'element-plus'
 import { getBackups, backupNow, downloadBackup, permissionStore } from '../api'
 import { Download, FolderAdd } from '@element-plus/icons-vue'
@@ -41,6 +45,7 @@ const hasPerm = (code) => permissionStore.has(code)
 const loading = ref(false)
 const backingUp = ref(false)
 const backupList = ref([])
+const { page, size, total, pagedList } = usePagination(backupList)
 
 const formatSize = (bytes) => {
   if (bytes == null) return '-'

@@ -11,7 +11,7 @@
           </div>
         </div>
       </template>
-      <el-table :data="list" v-loading="loading" stripe>
+      <el-table :data="pagedList" v-loading="loading" stripe class="list-table" max-height="calc(100vh - 320px)">
         <el-table-column prop="clientName" label="客户名称" min-width="160" show-overflow-tooltip />
         <el-table-column prop="contactPerson" label="联系人" width="100" />
         <el-table-column prop="contactPhone" label="联系电话" width="130" />
@@ -28,6 +28,8 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <TablePagination :total="total" v-model:page="page" v-model:size="size" />
     </el-card>
 
     <!-- 新增/编辑对话框 -->
@@ -103,6 +105,8 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import TablePagination from '../components/TablePagination.vue'
+import { usePagination } from '../composables/usePagination'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Download } from '@element-plus/icons-vue'
 import { getClients, addClient, updateClient, deleteClient, importClients, exportClients, checkClientDuplicate, permissionStore, downloadTemplate } from '../api'
@@ -117,6 +121,7 @@ const isEdit = ref(false)
 const formRef = ref(null)
 const uploadRef = ref(null)
 const list = ref([])
+const { page, size, total, pagedList } = usePagination(list)
 const importFile = ref(null)
 const duplicateNameMsg = ref('')
 const duplicateTaxMsg = ref('')

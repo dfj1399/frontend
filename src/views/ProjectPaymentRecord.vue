@@ -19,7 +19,7 @@
         </div>
       </template>
 
-      <el-table :data="groupedList" v-loading="loading" stripe show-summary :summary-method="getSummary">
+      <el-table :data="pagedList" v-loading="loading" stripe show-summary :summary-method="getSummary" class="list-table" max-height="calc(100vh - 320px)">
         <el-table-column prop="projectCode" label="项目编号" class-name="cell-nowrap" width="165" />
         <el-table-column prop="projectName" label="项目名称" min-width="220" show-overflow-tooltip>
           <template #default="{ row }">
@@ -48,6 +48,8 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <TablePagination :total="total" v-model:page="page" v-model:size="size" />
     </el-card>
 
     <!-- ==================== 回款对话框 ==================== -->
@@ -423,6 +425,8 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import TablePagination from '../components/TablePagination.vue'
+import { usePagination } from '../composables/usePagination'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getProjects, getClients, importProjectPayments, exportProjectPayments, exportPaymentDetail, getPaymentGroupedList, getPaymentOperationsByProject, addPaymentOperation, deletePaymentOperation, getPaymentSettlements, getSettlementTaxDetails, getInvoiceableTaxDetails, getProjectRevenueTax, getActiveVatItems, uploadSettlementDocs, getSettlementDocs, deleteSettlementDoc, permissionStore, loadPermissionsFromCache, downloadTemplate } from '../api'
 import { Upload, Download, Plus } from '@element-plus/icons-vue'
@@ -432,6 +436,7 @@ const hasPerm = (code) => permissionStore.has(code)
 
 const loading = ref(false)
 const groupedList = ref([])
+const { page, size, total, pagedList } = usePagination(groupedList)
 const allProjects = ref([])
 const clients = ref([])
 const selectedProjectId = ref(null)
